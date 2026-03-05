@@ -786,15 +786,27 @@ body {
   .nav-cta-desktop { display: none; }
   .nav-cta-mobile { display: list-item; }
 
+  .nav-cta-mobile .nav-cta {
+    display: inline-block;
+    padding: 10px 24px;
+    font-size: 0.8rem;
+    justify-self: auto;
+  }
+
   .section-hero {
     grid-template-columns: 1fr;
     gap: 40px;
-    padding: 100px 32px 90px;
+    padding: 100px 32px 60px;
+    min-height: auto;
   }
 
   .hero-portrait {
     max-width: 260px;
     justify-self: center;
+  }
+
+  .hero-inner {
+    text-align: center;
   }
 
   .hero-name {
@@ -810,13 +822,26 @@ body {
     text-align: center;
   }
 
-  .hero-socials { left: 50%; transform: translateX(-50%); }
+  /* Make socials flow naturally instead of absolute on mobile */
+  .hero-socials {
+    position: static;
+    transform: none;
+    left: auto;
+    justify-content: center;
+    margin-top: 8px;
+    padding-bottom: 0;
+  }
 
   .container { padding: 0 28px; }
 
   .about-grid {
     grid-template-columns: 1fr;
     gap: 40px;
+  }
+
+  .about-photo-placeholder {
+    padding-right: 0;
+    justify-content: center;
   }
 
   .services-grid {
@@ -852,6 +877,117 @@ body {
   }
 
   .step:first-child { padding-left: 0; }
+}
+
+/* ── RESPONSIVE — 480px (iPhone) ───────────────────── */
+@media (max-width: 480px) {
+  .navbar { padding: 0 20px; height: 60px; }
+
+  .nav-links { top: 60px; }
+
+  .nav-brand { font-size: 1.4rem; }
+
+  html { scroll-padding-top: 60px; }
+
+  .section-hero {
+    padding: 80px 20px 48px;
+    gap: 28px;
+  }
+
+  .hero-portrait {
+    max-width: 200px;
+  }
+
+  .hero-name {
+    font-size: 52px;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-socials {
+    font-size: 0.8rem;
+    gap: 12px;
+  }
+
+  .container { padding: 0 20px; }
+
+  /* About */
+  .section-about { padding: 56px 0; }
+
+  .about-text h2 { font-size: 38px; margin-bottom: 24px; }
+
+  .about-text p { font-size: 1rem; }
+
+  /* Services */
+  .section-services { padding: 72px 0; }
+
+  .section-services h2 { font-size: 30px; margin-bottom: 40px; }
+
+  .service-card { padding: 36px 24px; }
+
+  /* Stats — single column on iPhone */
+  .stats-grid { grid-template-columns: 1fr; }
+
+  .stat {
+    padding: 40px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(240, 231, 215, 0.1);
+  }
+
+  .stat:nth-child(2) { border-top: none; }
+  .stat:nth-child(3) { border-top: none; }
+  .stat:nth-child(4) { border-top: none; }
+  .stat:last-child { border-bottom: none; }
+
+  /* Portfolio — single column, smaller phone mockup */
+  .section-portfolio { padding: 72px 0; }
+
+  .section-portfolio h2 { font-size: 30px; }
+
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .phone-mockup {
+    width: 150px;
+    height: 266px;
+  }
+
+  /* Photography */
+  .section-photography { padding: 72px 0; }
+
+  .section-photography h2 { font-size: 30px; margin-bottom: 40px; }
+
+  .photo-grid { gap: 10px; }
+
+  /* How it works */
+  .section-how { padding: 72px 0; }
+
+  .section-how h2 { font-size: 30px; margin-bottom: 48px; }
+
+  .step { padding: 32px 0; }
+
+  /* Contact */
+  .section-contact { padding: 80px 0; }
+
+  .section-contact h2 { font-size: 32px; }
+
+  .contact-socials {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    font-size: 0.68rem;
+    padding: 14px 24px;
+    word-break: break-all;
+  }
+
+  /* Footer */
+  .footer { padding: 24px 20px; }
 }
 
 /* ── FADE-IN ANIMATION ──────────────────────────────── */
