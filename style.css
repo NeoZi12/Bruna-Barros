@@ -553,11 +553,11 @@ body {
 }
 
 .phone-mockup {
-  width: 190px;
-  height: 340px;
+  width: 270px;
+  height: 480px;
   background: var(--brown-dark);
-  border-radius: 28px;
-  padding: 14px;
+  border-radius: 36px;
+  padding: 18px;
   box-shadow: 0 12px 40px rgba(58, 51, 48, 0.22);
   position: relative;
 }
@@ -565,11 +565,11 @@ body {
 .phone-mockup::before {
   content: '';
   position: absolute;
-  top: 20px;
+  top: 26px;
   left: 50%;
   transform: translateX(-50%);
-  width: 44px;
-  height: 5px;
+  width: 54px;
+  height: 6px;
   background: rgba(240, 231, 215, 0.25);
   border-radius: 3px;
 }
@@ -578,9 +578,10 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(160deg, var(--taupe) 0%, var(--taupe-dark) 100%);
-  border-radius: 18px;
+  border-radius: 22px;
   opacity: 0.35;
   overflow: hidden;
+  position: relative;
 }
 
 .phone-screen:has(video) {
@@ -593,46 +594,172 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 18px;
+  border-radius: 22px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-.play-btn {
+/* ── VIDEO CONTROLS OVERLAY ─────────────────────────── */
+.video-controls {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    transparent 40%,
+    rgba(0,0,0,0.45) 100%
+  );
+}
+
+.phone-mockup:hover .video-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .video-controls { opacity: 1; pointer-events: auto; }
+}
+
+.ctrl-play-btn {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(20,20,20,0.65);
   border: none;
   cursor: pointer;
-  font-size: 1.1rem;
-  color: var(--brown-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, transform 0.2s;
-  padding-left: 3px;
+  transition: background 0.2s, transform 0.2s, opacity 0.3s;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0;
 }
 
-.play-btn:hover {
+.ctrl-play-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.ctrl-play-btn:hover {
+  background: rgba(20,20,20,0.82);
+  transform: scale(1.08);
+}
+
+.ctrl-bottom {
+  width: 80%;
+  padding-bottom: 24px;
+}
+
+.ctrl-progress {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.35);
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.ctrl-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background: #fff;
-  transform: translate(-50%, -50%) scale(1.08);
+  cursor: pointer;
 }
 
-.play-btn.hidden {
-  display: none;
+.ctrl-volume {
+  position: absolute;
+  bottom: 52px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-@media (max-width: 768px) {
-  .play-btn {
-    width: 56px;
-    height: 56px;
-    font-size: 1.3rem;
-  }
+.ctrl-vol-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.9;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-vol-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.ctrl-vol-bar {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 4px;
+  height: 110px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 1;
+}
+
+/* Background pill behind bar + icon on hover */
+.ctrl-volume::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 0;
+  background: rgba(0,0,0,0.4);
+  border-radius: 18px;
+  opacity: 0;
+  transition: opacity 0.2s, height 0.2s;
+}
+
+.ctrl-volume:hover::before {
+  height: 175px;
+  opacity: 1;
+}
+
+.ctrl-volume:hover .ctrl-vol-bar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ctrl-vol-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
 }
 
 .portfolio-label {
@@ -912,6 +1039,14 @@ body {
   .portfolio-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
+    justify-items: center;
+  }
+
+  .phone-mockup {
+    width: 240px;
+    height: 426px;
+    border-radius: 32px;
+    padding: 16px;
   }
 
   .photo-grid {
@@ -994,7 +1129,7 @@ body {
   .stat:nth-child(4) { border-top: none; }
   .stat:last-child { border-bottom: none; }
 
-  /* Portfolio — single column, smaller phone mockup */
+  /* Portfolio — single column, bigger phone mockup */
   .section-portfolio { padding: 72px 0; }
 
   .section-portfolio h2 { font-size: 30px; }
@@ -1005,8 +1140,10 @@ body {
   }
 
   .phone-mockup {
-    width: 150px;
-    height: 266px;
+    width: 270px;
+    height: 480px;
+    border-radius: 36px;
+    padding: 18px;
   }
 
   /* Photography */
@@ -1041,6 +1178,63 @@ body {
 
   /* Footer */
   .footer { padding: 24px 20px; }
+}
+
+/* ── TOUCH / MOBILE VIDEO CONTROLS ─────────────────── */
+
+/* On touch devices: controls always visible by default, auto-hide when playing */
+@media (hover: none) {
+  .video-controls {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ctrl-play-btn.btn-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Hide volume bar on touch — icon only for mute/unmute */
+  .ctrl-vol-bar {
+    display: none;
+  }
+
+  .ctrl-volume::before {
+    display: none;
+  }
+
+  /* Bigger play button for thumb */
+  .ctrl-play-btn {
+    width: 60px;
+    height: 60px;
+  }
+
+  .ctrl-play-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Taller seek bar track for easier touch */
+  .ctrl-progress {
+    height: 4px;
+  }
+
+  /* Bigger thumbs on range inputs */
+  .ctrl-progress::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ctrl-vol-bar::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Bigger volume icon */
+  .ctrl-vol-btn svg {
+    width: 26px;
+    height: 26px;
+  }
 }
 
 /* ── FADE-IN ANIMATION ──────────────────────────────── */

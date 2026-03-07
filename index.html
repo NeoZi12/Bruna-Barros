@@ -180,12 +180,17 @@
           <div class="portfolio-item">
             <div class="phone-mockup">
               <div class="phone-screen">
-                <video
-                  src="videos/Video1.mp4"
-                  loop
-                  playsinline
-                ></video>
-                <button class="play-btn" aria-label="Play video">&#9654;</button>
+                <video src="videos/Video1.mp4" loop playsinline></video>
+                <div class="video-controls">
+                  <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
+                  <div class="ctrl-bottom">
+                    <input type="range" class="ctrl-progress" min="0" max="100" value="0" step="0.1" aria-label="Seek">
+                  </div>
+                  <div class="ctrl-volume">
+                    <input type="range" class="ctrl-vol-bar" min="0" max="1" value="1" step="0.05" aria-label="Volume">
+                    <button class="ctrl-vol-btn" aria-label="Mute/Unmute"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+                  </div>
+                </div>
               </div>
             </div>
             <p class="portfolio-label">Travel · Organic</p>
