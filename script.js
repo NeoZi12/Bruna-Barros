@@ -38,6 +38,9 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
 
   playBtn.innerHTML = SVG_PLAY;
 
+  // Show first frame on load instead of black screen
+  video.addEventListener('loadedmetadata', () => { video.currentTime = 0.001; });
+
   // Auto-hide play button 2s after video starts playing
   let hideTimer = null;
 
