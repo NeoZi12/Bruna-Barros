@@ -73,18 +73,16 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   // Play / pause — tap/click anywhere on the phone screen toggles playback
   let lastTouchTime = 0;
 
-  // Touch handler — no preventDefault, preserves iOS gesture chain
+  // Keep touchend only for lastTouchTime tracking (used by volBtn click guard)
   controls.addEventListener('touchend', (e) => {
     if (e.target === progress || e.target === volBar ||
         e.target === volBtn || e.target.closest('.ctrl-vol-btn') ||
         e.target.closest('.ctrl-bottom')) return;
     lastTouchTime = Date.now();
-    if (video.paused) { video.play(); } else { video.pause(); }
   }, { passive: true });
 
-  // Click handler — desktop only (synthetic clicks from touch are ignored)
+  // Click handler — handles both desktop clicks and iOS synthetic clicks from taps
   controls.addEventListener('click', (e) => {
-    if (Date.now() - lastTouchTime < 500) return;
     if (e.target === progress || e.target === volBar || e.target === volBtn) return;
     e.preventDefault();
     if (video.paused) { video.play(); } else { video.pause(); }
