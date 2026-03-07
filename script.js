@@ -36,10 +36,19 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   const volBtn   = controls.querySelector('.ctrl-vol-btn');
   const volBar   = controls.querySelector('.ctrl-vol-bar');
 
-  playBtn.innerHTML = SVG_PLAY;
+  const SVG_VOL_ON  = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+  const SVG_VOL_OFF = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
 
-  // Show first frame on load instead of black screen
-  video.addEventListener('loadedmetadata', () => { video.currentTime = 0.001; });
+  playBtn.innerHTML = SVG_PLAY;
+  volBtn.innerHTML = SVG_VOL_OFF; // starts muted for iOS first-frame trick
+
+  // Show first frame on iOS: play+pause on canplay (requires muted attribute)
+  let firstFrameShown = false;
+  video.addEventListener('canplay', () => {
+    if (firstFrameShown) return;
+    firstFrameShown = true;
+    video.play().then(() => video.pause()).catch(() => {});
+  });
 
   // Auto-hide play button 2s after video starts playing
   let hideTimer = null;
@@ -61,15 +70,31 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
     }
   }, { passive: true });
 
-  // Play / pause — clicking anywhere on the phone (controls overlay) toggles
-  const togglePlay = (e) => {
-    // Don't fire if clicking the seek bar or volume controls
+  // Play / pause — tap/click anywhere on the phone screen toggles playback
+  let lastTouchTime = 0;
+
+  const unmuteOnFirstPlay = () => {
+    if (video.muted) {
+      video.muted = false;
+      volBtn.innerHTML = SVG_VOL_ON;
+    }
+  };
+
+  // Touch handler — no preventDefault, preserves iOS gesture chain
+  controls.addEventListener('touchend', (e) => {
+    if (e.target === progress || e.target === volBar ||
+        e.target === volBtn || e.target.closest('.ctrl-vol-btn') ||
+        e.target.closest('.ctrl-bottom')) return;
+    lastTouchTime = Date.now();
+    if (video.paused) { unmuteOnFirstPlay(); video.play(); } else { video.pause(); }
+  }, { passive: true });
+
+  // Click handler — desktop only (synthetic clicks from touch are ignored)
+  controls.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchTime < 500) return;
     if (e.target === progress || e.target === volBar || e.target === volBtn) return;
     e.preventDefault();
-    if (video.paused) { video.play(); } else { video.pause(); }
-  };
-  ['click', 'touchend'].forEach(evt => {
-    controls.addEventListener(evt, togglePlay);
+    if (video.paused) { unmuteOnFirstPlay(); video.play(); } else { video.pause(); }
   });
 
   video.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
@@ -86,9 +111,6 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
     video.currentTime = (progress.value / 100) * video.duration;
   });
 
-  const SVG_VOL_ON  = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
-  const SVG_VOL_OFF = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
-
   // Volume
   volBar.addEventListener('input', () => {
     video.volume = volBar.value;
@@ -96,13 +118,20 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
     volBtn.innerHTML = (video.muted || video.volume === 0) ? SVG_VOL_OFF : SVG_VOL_ON;
   });
 
-  const toggleMute = (e) => {
+  volBtn.addEventListener('touchend', (e) => {
+    e.stopPropagation();
+    video.muted = !video.muted;
+    volBtn.innerHTML = video.muted ? SVG_VOL_OFF : SVG_VOL_ON;
+    if (!video.muted) volBar.value = video.volume || 1;
+  }, { passive: true });
+
+  volBtn.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchTime < 500) return;
     e.preventDefault();
     video.muted = !video.muted;
     volBtn.innerHTML = video.muted ? SVG_VOL_OFF : SVG_VOL_ON;
-    if (!video.muted) volBar.value = video.volume;
-  };
-  ['click', 'touchend'].forEach(evt => volBtn.addEventListener(evt, toggleMute));
+    if (!video.muted) volBar.value = video.volume || 1;
+  });
 });
 
 // ── FADE-IN ON SCROLL ────────────────────────────────
