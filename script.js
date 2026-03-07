@@ -22,6 +22,32 @@ window.addEventListener('scroll', () => {
   navbar.classList.toggle('scrolled', window.scrollY > 20);
 }, { passive: true });
 
+// ── PORTFOLIO VIDEO PLAY BUTTON ──────────────────────
+document.querySelectorAll('.phone-screen').forEach(screen => {
+  const video = screen.querySelector('video');
+  const btn = screen.querySelector('.play-btn');
+  if (!video || !btn) return;
+
+  const toggle = () => {
+    if (video.paused) {
+      video.play();
+      btn.classList.add('hidden');
+    } else {
+      video.pause();
+      btn.classList.remove('hidden');
+    }
+  };
+
+  ['click', 'touchend'].forEach(evt => {
+    btn.addEventListener(evt, (e) => { e.preventDefault(); toggle(); });
+    video.addEventListener(evt, (e) => { e.preventDefault(); toggle(); });
+  });
+
+  video.addEventListener('ended', () => {
+    btn.classList.remove('hidden');
+  });
+});
+
 // ── FADE-IN ON SCROLL ────────────────────────────────
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {

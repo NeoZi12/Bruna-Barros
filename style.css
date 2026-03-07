@@ -580,6 +580,59 @@ body {
   background: linear-gradient(160deg, var(--taupe) 0%, var(--taupe-dark) 100%);
   border-radius: 18px;
   opacity: 0.35;
+  overflow: hidden;
+}
+
+.phone-screen:has(video) {
+  opacity: 1;
+  background: #000;
+}
+
+.phone-screen video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 18px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--brown-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  padding-left: 3px;
+}
+
+.play-btn:hover {
+  background: #fff;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.play-btn.hidden {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .play-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 1.3rem;
+  }
 }
 
 .portfolio-label {
