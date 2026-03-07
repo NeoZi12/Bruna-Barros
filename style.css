@@ -572,6 +572,7 @@ body {
   height: 6px;
   background: rgba(240, 231, 215, 0.25);
   border-radius: 3px;
+  z-index: 2;
 }
 
 .phone-screen {
