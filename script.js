@@ -38,24 +38,24 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
 
   playBtn.innerHTML = SVG_PLAY;
 
-  // Auto-hide play button after 2s of playing (works on both touch and desktop)
+  // Auto-hide play button 2s after video starts playing
   let hideTimer = null;
 
   const showBtn = () => {
     playBtn.classList.remove('btn-hidden');
-    clearTimeout(hideTimer);
   };
 
-  const scheduleHide = () => {
-    clearTimeout(hideTimer);
-    if (!video.paused) {
-      hideTimer = setTimeout(() => playBtn.classList.add('btn-hidden'), 2000);
-    }
+  const hideBtn = () => {
+    playBtn.classList.add('btn-hidden');
   };
 
+  // Any touch on the screen: show the button and restart the 2s timer
   controls.addEventListener('touchstart', () => {
+    clearTimeout(hideTimer);
     showBtn();
-    scheduleHide();
+    if (!video.paused) {
+      hideTimer = setTimeout(hideBtn, 2000);
+    }
   }, { passive: true });
 
   // Play / pause — clicking anywhere on the phone (controls overlay) toggles
@@ -69,9 +69,9 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
     controls.addEventListener(evt, togglePlay);
   });
 
-  video.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; scheduleHide(); });
-  video.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  showBtn(); });
-  video.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  showBtn(); });
+  video.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
+  video.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
+  video.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
 
   // Seek bar
   video.addEventListener('timeupdate', () => {
