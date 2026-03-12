@@ -1120,7 +1120,14 @@ body {
   aspect-ratio: 1;
   background: linear-gradient(160deg, var(--taupe) 0%, var(--taupe-dark) 100%);
   border: 1px solid rgba(240, 231, 215, 0.15);
-  opacity: 0.4;
+  overflow: hidden;
+}
+
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* ── HOW IT WORKS ───────────────────────────────────── */
