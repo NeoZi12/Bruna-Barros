@@ -19,6 +19,7 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="#about">About</a></li>
         <li><a href="#services">Services</a></li>
+        <li><a href="#pricing">Pricing</a></li>
         <li><a href="#portfolio">Portfolio</a></li>
         <li class="nav-cta-mobile">
           <a href="#contact" class="nav-cta">Let's Talk</a>
@@ -33,7 +34,7 @@
     <!-- ── HERO ───────────────────────────────────────── -->
     <section id="hero" class="section-hero">
       <div class="hero-portrait">
-        <span class="hero-portrait-label">Your photo here</span>
+        <img src="photos/bruna-profile.jpg" alt="Bruna Barros" />
       </div>
       <div class="hero-inner">
         <h1 class="hero-name">Bruna<br />Barros</h1>
@@ -96,8 +97,26 @@
             </div>
           </div>
           <div class="about-photo-placeholder">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
+            <div class="portfolio-phone">
+              <div class="phone-screen">
+                <video src="videos/Video1.mp4" poster="photos/poster1.jpg" loop playsinline muted preload="metadata"></video>
+                <div class="video-controls">
+                  <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
+                  <div class="ctrl-bottom">
+                    <input type="range" class="ctrl-progress" min="0" max="100" value="0" step="0.1" aria-label="Seek">
+                  </div>
+                  <div class="ctrl-volume">
+                    <input type="range" class="ctrl-vol-bar" min="0" max="1" value="1" step="0.05" aria-label="Volume">
+                    <button class="ctrl-vol-btn" aria-label="Mute/Unmute"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+                  </div>
+                </div>
+              </div>
+              <div class="top"></div>
+              <div class="speaker"></div>
+              <div class="camera"><div class="int"></div></div>
+              <div class="btn1"></div>
+              <div class="btn2"></div>
+              <div class="btn3"></div>
             </div>
           </div>
         </div>
@@ -110,33 +129,101 @@
         <h2>What I Create</h2>
         <div class="services-grid">
           <div class="service-card">
-            <h3>Travel Content</h3>
+            <h3>Travel &amp; Airbnb Content</h3>
             <p>
-              Destination guides, flight and hotel reviews, packing tips, and
-              honest reviews of luggage, backpacks, and travel accessories.
+              Destination guides, Airbnb reviews, hotel and accommodation
+              content, packing tips, and honest travel recommendations — the
+              kind of content that makes people book.
             </p>
           </div>
           <div class="service-card">
-            <h3>Beauty &amp; Skincare</h3>
+            <h3>Tech &amp; App Reviews</h3>
             <p>
-              Tutorials, product reviews, get-ready-with-me style content —
-              authentic and relatable, built to drive real purchasing decisions.
+              Honest, engaging app demos and digital product reviews — UGC
+              content that shows real usage and drives downloads and sign-ups.
             </p>
           </div>
           <div class="service-card">
-            <h3>Lifestyle</h3>
+            <h3>Travel Essentials</h3>
             <p>
-              Day in my life, product recommendations, everyday essentials — the
-              kind of content your audience actually wants to watch.
+              Luggage, backpacks, travel accessories, and gear reviews —
+              authentic content built for travelers who research before they buy.
             </p>
           </div>
           <div class="service-card">
             <h3>Short-Form Ads</h3>
             <p>
-              UGC ads optimised for TikTok, Instagram Reels, and Meta — concept,
-              filming, and editing all handled end-to-end.
+              UGC ads optimised for TikTok, Instagram Reels, and Meta —
+              concept, filming, and editing handled end-to-end.
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── INVESTMENT ────────────────────────────────── -->
+    <section id="pricing" class="section-investment">
+      <div class="container">
+        <h2>Pricing</h2>
+        <p class="investment-sub">
+          Pricing may vary based on deliverables, usage rights, and brand
+          needs. Custom requests? Let's talk — I'm flexible.
+        </p>
+        <div class="pricing-grid">
+
+          <!-- Starter -->
+          <div class="pricing-col">
+            <div class="pricing-inner">
+              <span class="pricing-name">Starter</span>
+              <span class="pricing-price">Starting at $75 <em>USD</em></span>
+              <ul class="pricing-features">
+                <li>1 vertical video (up to 60s)</li>
+                <li>1 revision round</li>
+                <li>Delivered in 7 days</li>
+              </ul>
+              <p class="pricing-target">
+                Perfect for brands wanting to test UGC for the first time.
+              </p>
+              <a href="#contact" class="pricing-cta">Get Started</a>
+            </div>
+          </div>
+
+          <!-- Core (featured) -->
+          <div class="pricing-col pricing-col--featured">
+            <div class="pricing-inner">
+              <span class="pricing-badge">&#9733; Most Popular</span>
+              <span class="pricing-name">Core</span>
+              <span class="pricing-price">Starting at $190 <em>USD</em></span>
+              <ul class="pricing-features">
+                <li>3 vertical videos</li>
+                <li>1 revision round each</li>
+                <li>Delivered in 10 days</li>
+              </ul>
+              <p class="pricing-target">
+                Ideal for brands ready to build a content library.
+              </p>
+              <a href="#contact" class="pricing-cta">Get Started</a>
+            </div>
+          </div>
+
+          <!-- Brand Pack -->
+          <div class="pricing-col">
+            <div class="pricing-inner">
+              <span class="pricing-name">Brand Pack</span>
+              <span class="pricing-price">Starting at $320 <em>USD</em></span>
+              <ul class="pricing-features">
+                <li>5 vertical videos</li>
+                <li>Available in English, Portuguese &amp; Spanish</li>
+                <li>2 revision rounds each</li>
+                <li>Delivered in 14 days</li>
+              </ul>
+              <p class="pricing-target">
+                Best for brands looking to scale across multiple markets.
+              </p>
+              <a href="#contact" class="pricing-cta">Get Started</a>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -150,7 +237,7 @@
             <span class="stat-label">YouTube Subscribers</span>
           </div>
           <div class="stat">
-            <span class="stat-number">6K</span>
+            <span class="stat-number">7K</span>
             <span class="stat-label">TikTok Followers</span>
           </div>
           <div class="stat">
@@ -173,14 +260,11 @@
     <section id="portfolio" class="section-portfolio">
       <div class="container">
         <h2>Portfolio</h2>
-        <p class="section-sub">
-          Content coming soon — reach out to see my latest work.
-        </p>
         <div class="portfolio-grid">
           <div class="portfolio-item">
-            <div class="phone-mockup">
+            <div class="portfolio-phone">
               <div class="phone-screen">
-                <video src="videos/Video1.mp4" loop playsinline preload="metadata"></video>
+                <video src="videos/Video1.mp4" poster="photos/poster1.jpg" loop playsinline muted preload="metadata"></video>
                 <div class="video-controls">
                   <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
                   <div class="ctrl-bottom">
@@ -192,38 +276,38 @@
                   </div>
                 </div>
               </div>
+              <div class="top"></div>
+              <div class="speaker"></div>
+              <div class="camera"><div class="int"></div></div>
+              <div class="btn1"></div>
+              <div class="btn2"></div>
+              <div class="btn3"></div>
             </div>
-            <p class="portfolio-label">Travel · Organic</p>
+            <p class="portfolio-label">Travel</p>
           </div>
           <div class="portfolio-item">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
+            <div class="portfolio-phone">
+              <div class="phone-screen">
+                <video src="videos/Video2.mp4" poster="photos/poster2.jpg" loop playsinline muted preload="metadata"></video>
+                <div class="video-controls">
+                  <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
+                  <div class="ctrl-bottom">
+                    <input type="range" class="ctrl-progress" min="0" max="100" value="0" step="0.1" aria-label="Seek">
+                  </div>
+                  <div class="ctrl-volume">
+                    <input type="range" class="ctrl-vol-bar" min="0" max="1" value="1" step="0.05" aria-label="Volume">
+                    <button class="ctrl-vol-btn" aria-label="Mute/Unmute"><svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+                  </div>
+                </div>
+              </div>
+              <div class="top"></div>
+              <div class="speaker"></div>
+              <div class="camera"><div class="int"></div></div>
+              <div class="btn1"></div>
+              <div class="btn2"></div>
+              <div class="btn3"></div>
             </div>
-            <p class="portfolio-label">Beauty · Paid Ad</p>
-          </div>
-          <div class="portfolio-item">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
-            </div>
-            <p class="portfolio-label">Lifestyle · Organic</p>
-          </div>
-          <div class="portfolio-item">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
-            </div>
-            <p class="portfolio-label">Travel · Paid Ad</p>
-          </div>
-          <div class="portfolio-item">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
-            </div>
-            <p class="portfolio-label">Beauty · Organic</p>
-          </div>
-          <div class="portfolio-item">
-            <div class="phone-mockup">
-              <div class="phone-screen"></div>
-            </div>
-            <p class="portfolio-label">Skincare · Paid Ad</p>
+            <p class="portfolio-label">Beauty</p>
           </div>
         </div>
       </div>
@@ -267,8 +351,8 @@
             <span class="step-num">03</span>
             <h3>Ready to Publish</h3>
             <p>
-              You receive polished content ready to go live. Revisions are
-              included until it feels exactly right.
+              You receive polished content ready to go live. Revision rounds are
+              included as per your package.
             </p>
           </div>
         </div>
