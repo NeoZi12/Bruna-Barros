@@ -95,26 +95,6 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   player.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY; });
   player.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY; });
 
-  // ── VISUAL FADE TIMER (standalone — does NOT touch play/pause logic) ──
-  // Fades the center circle out 1 s after playback starts or resumes,
-  // and brings it back instantly whenever playback stops.
-  let hideBtnTimeout;
-
-  player.addEventListener('play', () => {
-    clearTimeout(hideBtnTimeout);
-    hideBtnTimeout = setTimeout(() => { playBtn.classList.add('fade-out-btn'); }, 1000);
-  });
-
-  player.addEventListener('pause', () => {
-    clearTimeout(hideBtnTimeout);
-    playBtn.classList.remove('fade-out-btn');
-  });
-
-  player.addEventListener('ended', () => {
-    clearTimeout(hideBtnTimeout);
-    playBtn.classList.remove('fade-out-btn');
-  });
-
   // ── SEEK BAR ─────────────────────────────────────────
   // Vidstack fires 'time-update' (kebab-case, not 'timeupdate')
   player.addEventListener('time-update', () => {

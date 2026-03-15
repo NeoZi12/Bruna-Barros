@@ -1656,12 +1656,3 @@ media-player[data-playing][data-idle] .ctrl-play-btn {
   opacity: 1;
   transform: translateY(0);
 }
-
-/* ── PLAY BUTTON VISUAL FADE ────────────────────────── */
-/* Applied by JS 1 s after playback starts; removed instantly on pause.
-   !important overrides any specificity conflicts with data-attribute rules. */
-.fade-out-btn {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 0.3s ease;
-}
