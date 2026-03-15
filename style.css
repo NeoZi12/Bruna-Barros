@@ -1008,6 +1008,8 @@ body {
   margin-top: auto;
   margin-bottom: auto;
   padding: 0;
+  /* Purely visual — taps must reach the controls overlay, not this icon */
+  pointer-events: none;
 }
 
 .ctrl-play-btn svg {
@@ -1016,9 +1018,13 @@ body {
   display: block;
 }
 
-.ctrl-play-btn:hover {
-  background: rgba(20,20,20,0.82);
-  transform: scale(1.08);
+/* Desktop hover only — touch devices have no reliable hover state and
+   a "stuck" hover after a tap would leave the button scaled/brightened */
+@media (hover: hover) {
+  .ctrl-play-btn:hover {
+    background: rgba(20,20,20,0.82);
+    transform: scale(1.08);
+  }
 }
 
 .ctrl-bottom {
@@ -1620,6 +1626,12 @@ body {
   .ctrl-vol-bar::-webkit-slider-thumb {
     width: 18px;
     height: 18px;
+  }
+
+  /* 44×44 minimum touch target (Apple HIG / WCAG 2.5.5) */
+  .ctrl-vol-btn {
+    min-width: 44px;
+    min-height: 44px;
   }
 
   /* Bigger volume icon */

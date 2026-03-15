@@ -92,9 +92,20 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
       hasInteractedWithVolume = true;
     }
 
-    if (player.paused) { player.play(); } else { player.pause(); }
+    if (player.paused) {
+      player.play();
+      // Start the hide timer immediately — don't wait for the async 'play' event.
+      // On iOS the event can fire late, leaving the button visibly stuck.
+      playBtn.innerHTML = SVG_PAUSE;
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(hideBtn, 2000);
+    } else {
+      player.pause();
+    }
   });
 
+  // 'play' event: icon already updated above for taps; this handles any
+  // programmatic play() calls (e.g. the visibility observer resuming).
   player.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
   player.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
   player.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
@@ -121,39 +132,50 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
     player.volume = v;
     player.muted  = (v === 0);
     if (v > 0) lastVolume = v;          // remember last audible level
-    volBtn.innerHTML = player.muted ? SVG_VOL_OFF : SVG_VOL_ON;
+    // Icon update is handled by the 'volume-change' listener below
   });
 
   // ── MUTE BUTTON ──────────────────────────────────────
-  // Shared toggle logic — completely decoupled from play/pause
+  // Shared toggle logic — completely decoupled from play/pause.
+  // Uses player.muted = !player.muted so Vidstack owns the state change
+  // and fires 'volume-change', which drives the icon (single source of truth).
   const toggleMute = () => {
     hasInteractedWithVolume = true;
-    if (player.muted) {
+    player.muted = !player.muted;
+    if (!player.muted) {
       // Unmute: restore last known audible level (never drops back to 0)
-      player.muted  = false;
       player.volume = lastVolume;
       volBar.value  = lastVolume;
-      volBtn.innerHTML = SVG_VOL_ON;
     } else {
       // Mute: remember current level before silencing
       if (player.volume > 0) lastVolume = player.volume;
-      player.muted = true;
       volBar.value = 0;
-      volBtn.innerHTML = SVG_VOL_OFF;
     }
     // Video continues playing — mute only affects audio, never playback state
   };
 
-  // Touch: stopPropagation stops the touchend from reaching the play/pause handler
+  // Authoritative icon sync — fires whenever Vidstack's volume/mute state
+  // changes, including programmatic updates and slider input above.
+  player.addEventListener('volume-change', () => {
+    volBtn.innerHTML = (player.muted || player.volume === 0) ? SVG_VOL_OFF : SVG_VOL_ON;
+  });
+
+  // Touch: preventDefault suppresses the ghost click iOS fires ~300 ms later;
+  // stopPropagation decouples from the play/pause controls handler above.
+  // We also stamp lastTouchTime here because stopPropagation prevents the
+  // controls touchend from reaching it — without this, the click guard below
+  // never fires and toggleMute() would run twice on every mobile tap.
   volBtn.addEventListener('touchend', (e) => {
     e.stopPropagation();
+    e.preventDefault();
+    lastTouchTime = Date.now();
     toggleMute();
-  }, { passive: true });
+  });
 
-  // Desktop click: stopPropagation stops the click from bubbling to controls
-  // Deduplicate against the touchend above using the 500 ms guard
+  // Desktop click: stopPropagation decouples from play/pause;
+  // 500 ms guard deduplicates against the touchend handler above.
   volBtn.addEventListener('click', (e) => {
-    e.stopPropagation();                // Task 1: decouple from play/pause
+    e.stopPropagation();
     if (Date.now() - lastTouchTime < 500) return;
     e.preventDefault();
     toggleMute();
