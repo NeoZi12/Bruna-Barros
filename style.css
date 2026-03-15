@@ -967,203 +967,34 @@ body {
 }
 
 
-/* ── VIDEO CONTROLS OVERLAY ─────────────────────────── */
-.video-controls {
-  position: absolute;
-  inset: 0;
+/* ── VIDSTACK NATIVE UI THEMING ──────────────────────── */
+/* Scope all overrides to .portfolio-video so they never bleed out.
+   --media-brand drives the progress-bar fill, slider thumbs, and the
+   large centre play-button ring — we use the portfolio's warm brown.  */
+.portfolio-video {
+  --media-brand: #c98a5e;
+  --media-font-family: 'Inter', sans-serif;
+  /* Clip Vidstack's absolutely-positioned controls to the phone's
+     rounded corners (phone-screen already has overflow:hidden, but
+     this guarantees the native gradient scrim is also clipped).      */
   border-radius: 25px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  pointer-events: none;
-  background: linear-gradient(to bottom,
-    transparent 40%,
-    rgba(0,0,0,0.45) 100%
-  );
+  overflow: hidden;
 }
 
-.portfolio-phone:hover .video-controls {
-  opacity: 1;
-  pointer-events: auto;
+/* Transparent control-bar background — let our gradient scrim show
+   through instead of Vidstack's default heavy dark bar.             */
+.portfolio-video media-controls-group {
+  background: transparent !important;
 }
 
-@media (hover: none) {
-  .video-controls { opacity: 1; pointer-events: auto; }
-}
-
-.ctrl-play-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(20,20,20,0.65);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.2s, opacity 0.3s;
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 0;
-  /* Purely visual — taps must reach the controls overlay, not this icon */
-  pointer-events: none;
-}
-
-.ctrl-play-btn svg {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
-/* Desktop hover only — touch devices have no reliable hover state and
-   a "stuck" hover after a tap would leave the button scaled/brightened */
-@media (hover: hover) {
-  .ctrl-play-btn:hover {
-    background: rgba(20,20,20,0.82);
-    transform: scale(1.08);
-  }
-}
-
-/* Auto-hide the overlay circle when Vidstack marks the player as both
-   playing AND idle (no pointer/touch activity for ~2 s).
-   This replaces the old JS setTimeout approach entirely — Vidstack owns
-   the idle timer, so there is no risk of race conditions or sticky state. */
-media-player[data-playing][data-idle] .ctrl-play-btn {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.ctrl-bottom {
-  width: 80%;
-  padding-bottom: 24px;
-}
-
-.ctrl-progress {
-  width: 100%;
-  height: 3px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: rgba(255,255,255,0.35);
-  border-radius: 2px;
-  cursor: pointer;
-  outline: none;
-}
-
-.ctrl-progress::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #fff;
-  cursor: pointer;
-}
-
-/* ── VOLUME CONTROL ──────────────────────────────────── */
-/* Slider + button are flex siblings in the same column — there is
-   no physical gap between them, so the mouse cannot "fall through"
-   and lose the :hover state (Task 1 fix).                           */
-.ctrl-volume {
-  position: absolute;
-  bottom: 52px;
-  right: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Transparent fill: the entire container area is a hover target
-     even in the zone above the icon where the slider lives (Task 2) */
-  background: transparent;
-}
-
-.ctrl-vol-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  /* Generous padding = larger hit box, harder to slip off (Task 2) */
-  padding: 6px;
-  line-height: 1;
-  opacity: 0.85;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.2s ease;
-}
-
-.ctrl-vol-btn:hover {
-  opacity: 1;
-}
-
-.ctrl-vol-btn svg {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-
-/* Slider is a normal flex item stacked above the button.
-   Removing position:absolute closes the gap that caused hover loss.
-   The element is invisible (opacity:0) but still occupies its 90 px
-   slot, which is exactly what we need — a continuous hover region.   */
-.ctrl-vol-bar {
-  writing-mode: vertical-lr;
-  direction: rtl;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 4px;
-  height: 90px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-  cursor: pointer;
-  outline: none;
-  /* Space between slider bottom and button top */
-  margin-bottom: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 2;
-}
-
-/* ── GLASS PILL ───────────────────────────────────────── */
-/* Uses inset instead of explicit width/height so the pill always
-   wraps the live container size — no manual arithmetic, no clipping
-   risk as the container changes (Task 3).                           */
-.ctrl-volume::before {
-  content: '';
-  position: absolute;
-  /* 8 px top/bottom overflow, 7 px left/right → pill is 36 px wide
-     and ~16 px taller than the container; border-radius rounds it   */
-  inset: -8px -7px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.ctrl-volume:hover::before {
-  opacity: 1;
-}
-
-.ctrl-volume:hover .ctrl-vol-bar {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Minimal thumb: clean white circle, soft depth shadow */
-.ctrl-vol-bar::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #fff;
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+/* Soft gradient scrim: invisible at top, dark vignette at the bottom
+   so the white icons stay readable on any video content.            */
+.portfolio-video media-controls {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.55) 100%
+  ) !important;
 }
 
 .portfolio-label {
@@ -1584,64 +1415,6 @@ media-player[data-playing][data-idle] .ctrl-play-btn {
     font-size: 0.68rem;
     padding: 14px 24px;
     word-break: break-all;
-  }
-}
-
-/* ── TOUCH / MOBILE VIDEO CONTROLS ─────────────────── */
-
-/* On touch devices: controls always visible by default, auto-hide when playing */
-@media (hover: none) {
-  .video-controls {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Hide volume bar on touch — icon only for mute/unmute */
-  .ctrl-vol-bar {
-    display: none;
-  }
-
-  .ctrl-volume::before {
-    display: none;
-  }
-
-  /* Bigger play button for thumb */
-  .ctrl-play-btn {
-    width: 60px;
-    height: 60px;
-  }
-
-  .ctrl-play-btn svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  /* Taller seek bar track for easier touch */
-  .ctrl-progress {
-    height: 4px;
-  }
-
-  /* Bigger thumbs on range inputs */
-  .ctrl-progress::-webkit-slider-thumb {
-    width: 18px;
-    height: 18px;
-  }
-
-  .ctrl-vol-bar::-webkit-slider-thumb {
-    width: 18px;
-    height: 18px;
-  }
-
-  /* 44×44 minimum touch target (Apple HIG / WCAG 2.5.5) */
-  .ctrl-vol-btn {
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  /* Bigger volume icon */
-  .ctrl-vol-btn svg {
-    width: 26px;
-    height: 26px;
   }
 }
 
