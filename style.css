@@ -1027,6 +1027,15 @@ body {
   }
 }
 
+/* Auto-hide the overlay circle when Vidstack marks the player as both
+   playing AND idle (no pointer/touch activity for ~2 s).
+   This replaces the old JS setTimeout approach entirely — Vidstack owns
+   the idle timer, so there is no risk of race conditions or sticky state. */
+media-player[data-playing][data-idle] .ctrl-play-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .ctrl-bottom {
   width: 80%;
   padding-bottom: 24px;
@@ -1585,11 +1594,6 @@ body {
   .video-controls {
     opacity: 1;
     pointer-events: auto;
-  }
-
-  .ctrl-play-btn.btn-hidden {
-    opacity: 0;
-    pointer-events: none;
   }
 
   /* Hide volume bar on touch — icon only for mute/unmute */

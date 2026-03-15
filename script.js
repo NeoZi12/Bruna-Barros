@@ -44,21 +44,6 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   volBtn.innerHTML  = SVG_VOL_OFF;
   volBar.value      = 0;
 
-  // Auto-hide play button 2s after playback starts
-  let hideTimer = null;
-
-  const showBtn = () => { playBtn.classList.remove('btn-hidden'); };
-  const hideBtn = () => { playBtn.classList.add('btn-hidden'); };
-
-  // Any touch on the screen: show the button and restart the 2s timer
-  controls.addEventListener('touchstart', () => {
-    clearTimeout(hideTimer);
-    showBtn();
-    if (!player.paused) {
-      hideTimer = setTimeout(hideBtn, 2000);
-    }
-  }, { passive: true });
-
   // Tracks whether the user has ever deliberately touched the volume controls.
   // While false, the first play-tap Smart Unmutes to 50% volume.
   let hasInteractedWithVolume = false;
@@ -94,21 +79,21 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
 
     if (player.paused) {
       player.play();
-      // Start the hide timer immediately — don't wait for the async 'play' event.
-      // On iOS the event can fire late, leaving the button visibly stuck.
       playBtn.innerHTML = SVG_PAUSE;
-      clearTimeout(hideTimer);
-      hideTimer = setTimeout(hideBtn, 2000);
     } else {
       player.pause();
     }
+
+    // Drop :focus / :active immediately so iOS/Android cannot hold the button
+    // in a "sticky" highlighted state after the tap completes.
+    document.activeElement.blur();
   });
 
-  // 'play' event: icon already updated above for taps; this handles any
-  // programmatic play() calls (e.g. the visibility observer resuming).
-  player.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
-  player.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
-  player.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
+  // Icon-only sync — visibility is handled entirely by Vidstack's data attributes.
+  // 'play' covers programmatic play() calls (e.g. the visibility observer resuming).
+  player.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; });
+  player.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY; });
+  player.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY; });
 
   // ── SEEK BAR ─────────────────────────────────────────
   // Vidstack fires 'time-update' (kebab-case, not 'timeupdate')
