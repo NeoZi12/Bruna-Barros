@@ -191,18 +191,25 @@ body {
 /* ── HERO ───────────────────────────────────────────── */
 .section-hero {
   background: var(--cream);
-  min-height: 70vh;
+  min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: clamp(1.5rem, 4vw, 3.75rem);
-  padding: 80px clamp(1.25rem, 6vw, 5rem) 70px;
+  /* vh-based gap: tighter on short screens, spacious on tall ones */
+  gap: clamp(1rem, 5vh, 3rem);
+  /* 120px top = 84px navbar + 36px breathing room */
+  padding: 120px clamp(1.25rem, 6vw, 5rem) 60px;
   position: relative;
 }
 
 .hero-portrait {
   width: 100%;
   max-width: 420px;
+  /* Fluid height cap: portrait never exceeds 50 % of viewport height.
+     At 800 px screen → max 400 px; the 420 px floor keeps it from
+     shrinking too small on very tall screens (capped at 420 px anyway
+     by max-width + aspect-ratio). */
+  max-height: clamp(260px, 50vh, 420px);
   aspect-ratio: 1;
   background: linear-gradient(145deg, #c98a5e 0%, #b87444 100%);
   border-radius: 24px;
@@ -298,12 +305,14 @@ body {
 /* ── ABOUT ──────────────────────────────────────────── */
 .section-about {
   background: var(--cream-light);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
 }
 
+/* Phone hidden: single-column so text spans the full container width.
+   Restore to `1.8fr 1fr` when the About phone is uncommented in HTML. */
 .about-grid {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
+  grid-template-columns: 1fr;
   gap: 60px;
   align-items: center;
 }
@@ -321,6 +330,13 @@ body {
   text-transform: uppercase;
   color: var(--taupe-dark);
   font-weight: 500;
+}
+
+/* Constrain reading width when phone is hidden and text spans full container.
+   Remove max-width when restoring the two-column layout. */
+.about-right {
+  max-width: 780px;
+  margin-inline: auto;
 }
 
 .about-text h2 {
@@ -452,7 +468,7 @@ body {
 /* ── SERVICES ───────────────────────────────────────── */
 .section-services {
   background: var(--cream);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
 }
 
 .section-services h2 {
@@ -746,7 +762,7 @@ body {
 /* ── PORTFOLIO ──────────────────────────────────────── */
 .section-portfolio {
   background: var(--cream);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
 }
 
 .section-portfolio h2 {
@@ -885,7 +901,8 @@ body {
   position: relative;
 }
 
-.phone-screen:has(video) {
+.phone-screen:has(video),
+.phone-screen:has(media-player) {
   opacity: 1;
   background: #000;
 }
@@ -897,6 +914,27 @@ body {
   display: block;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.phone-screen media-player {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Force cover fit on Vidstack's internal video element */
+.phone-screen media-player video {
+  object-fit: cover;
+}
+
+/* Poster is natively visible while paused (browser renders it on the video canvas).
+   Once Vidstack has started playback at least once it adds [data-started] to the
+   player element. At that point, enable a CSS opacity transition so the jump from
+   poster → first video frame is a smooth 0.4 s dissolve rather than a hard cut. */
+.phone-screen media-player[data-started] video {
+  transition: opacity 0.4s ease;
 }
 
 /* Decorative phone used in the About section (no video, no controls) */
@@ -1003,6 +1041,10 @@ body {
   cursor: pointer;
 }
 
+/* ── VOLUME CONTROL ──────────────────────────────────── */
+/* Slider + button are flex siblings in the same column — there is
+   no physical gap between them, so the mouse cannot "fall through"
+   and lose the :hover state (Task 1 fix).                           */
 .ctrl-volume {
   position: absolute;
   bottom: 52px;
@@ -1010,6 +1052,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Transparent fill: the entire container area is a hover target
+     even in the zone above the icon where the slider lives (Task 2) */
+  background: transparent;
 }
 
 .ctrl-vol-btn {
@@ -1017,13 +1062,19 @@ body {
   border: none;
   color: #fff;
   cursor: pointer;
-  padding: 0;
+  /* Generous padding = larger hit box, harder to slip off (Task 2) */
+  padding: 6px;
   line-height: 1;
-  opacity: 0.9;
-  z-index: 1;
+  opacity: 0.85;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.ctrl-vol-btn:hover {
+  opacity: 1;
 }
 
 .ctrl-vol-btn svg {
@@ -1032,6 +1083,10 @@ body {
   display: block;
 }
 
+/* Slider is a normal flex item stacked above the button.
+   Removing position:absolute closes the gap that caused hover loss.
+   The element is invisible (opacity:0) but still occupies its 90 px
+   slot, which is exactly what we need — a continuous hover region.   */
 .ctrl-vol-bar {
   writing-mode: vertical-lr;
   direction: rtl;
@@ -1039,37 +1094,39 @@ body {
   appearance: none;
   width: 4px;
   height: 90px;
-  background: rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 2px;
   cursor: pointer;
   outline: none;
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* Space between slider bottom and button top */
+  margin-bottom: 8px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
-  z-index: 1;
+  transition: opacity 0.2s ease;
+  z-index: 2;
 }
 
-/* Background pill behind bar + icon on hover */
+/* ── GLASS PILL ───────────────────────────────────────── */
+/* Uses inset instead of explicit width/height so the pill always
+   wraps the live container size — no manual arithmetic, no clipping
+   risk as the container changes (Task 3).                           */
 .ctrl-volume::before {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 0;
-  background: rgba(0,0,0,0.4);
-  border-radius: 18px;
+  /* 8 px top/bottom overflow, 7 px left/right → pill is 36 px wide
+     and ~16 px taller than the container; border-radius rounds it   */
+  inset: -8px -7px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
   opacity: 0;
-  transition: opacity 0.2s, height 0.2s;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .ctrl-volume:hover::before {
-  height: 130px;
   opacity: 1;
 }
 
@@ -1078,13 +1135,15 @@ body {
   pointer-events: auto;
 }
 
+/* Minimal thumb: clean white circle, soft depth shadow */
 .ctrl-vol-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .portfolio-label {
@@ -1098,7 +1157,7 @@ body {
 /* ── PHOTOGRAPHY ────────────────────────────────────── */
 .section-photography {
   background: var(--brown-dark);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
 }
 
 .section-photography h2 {
@@ -1133,7 +1192,7 @@ body {
 /* ── HOW IT WORKS ───────────────────────────────────── */
 .section-how {
   background: var(--cream-light);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
 }
 
 .section-how h2 {
@@ -1193,7 +1252,7 @@ body {
 /* ── CONTACT ────────────────────────────────────────── */
 .section-contact {
   background: var(--white);
-  padding: clamp(3rem, 5vw, 4rem) 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
   text-align: center;
 }
 
@@ -1247,6 +1306,24 @@ body {
   font-size: 0.7rem;
   color: rgba(240, 231, 215, 0.35);
   letter-spacing: 0.1em;
+}
+
+/* ── HERO — short-screen fix (laptops: 1280×800, 1440×900, etc.) ── */
+/* Targets viewports that are wide enough to keep the two-column layout
+   but short enough that the portrait + socials become cramped.
+   At 800 px height: portrait → 38vh ≈ 304 px (was 420 px), giving the
+   socials a comfortable 160 px+ buffer below the image. */
+@media (max-height: 900px) and (min-width: 769px) {
+  .hero-portrait {
+    max-height: 38vh;
+  }
+
+  /* Scale the social-links anchor point with viewport height instead of
+     a fixed 52 px so it stays proportionally clear of the portrait on
+     any screen in this range. */
+  .hero-socials {
+    bottom: clamp(1.5rem, 5vh, 3.25rem);
+  }
 }
 
 /* ── PORTFOLIO PHONE — desktop upsize ──────────────── */

@@ -27,9 +27,9 @@ const SVG_PLAY  = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org
 const SVG_PAUSE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="4" height="18" rx="1.5" fill="white"/><rect x="15" y="3" width="4" height="18" rx="1.5" fill="white"/></svg>`;
 
 document.querySelectorAll('.phone-screen').forEach(screen => {
-  const video    = screen.querySelector('video');
+  const player   = screen.querySelector('media-player');
   const controls = screen.querySelector('.video-controls');
-  if (!video || !controls) return;
+  if (!player || !controls) return;
 
   const playBtn  = controls.querySelector('.ctrl-play-btn');
   const progress = controls.querySelector('.ctrl-progress');
@@ -39,20 +39,12 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   const SVG_VOL_ON  = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
   const SVG_VOL_OFF = `<svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
 
-  // Initial UI state — video starts muted, so bar and icon reflect silence
+  // Initial UI state — player starts paused & muted, showing the poster
   playBtn.innerHTML = SVG_PLAY;
   volBtn.innerHTML  = SVG_VOL_OFF;
   volBar.value      = 0;
 
-  // Show first frame on iOS: play+pause on canplay (requires muted attribute)
-  let firstFrameShown = false;
-  video.addEventListener('canplay', () => {
-    if (firstFrameShown) return;
-    firstFrameShown = true;
-    video.play().then(() => video.pause()).catch(() => {});
-  });
-
-  // Auto-hide play button 2s after video starts playing
+  // Auto-hide play button 2s after playback starts
   let hideTimer = null;
 
   const showBtn = () => { playBtn.classList.remove('btn-hidden'); };
@@ -62,104 +54,132 @@ document.querySelectorAll('.phone-screen').forEach(screen => {
   controls.addEventListener('touchstart', () => {
     clearTimeout(hideTimer);
     showBtn();
-    if (!video.paused) {
+    if (!player.paused) {
       hideTimer = setTimeout(hideBtn, 2000);
     }
   }, { passive: true });
 
   // Tracks whether the user has ever deliberately touched the volume controls.
-  // While false, the first play-tap auto-unmutes the video to full volume.
+  // While false, the first play-tap Smart Unmutes to 50% volume.
   let hasInteractedWithVolume = false;
   let lastTouchTime = 0;
 
+  // Last known non-zero volume — restored when the user unmutes.
+  // Defaults to 0.5 so the very first unmute lands at a comfortable level.
+  let lastVolume = 0.5;
+
   // Keep touchend only for lastTouchTime tracking (used by volBtn click guard)
   controls.addEventListener('touchend', (e) => {
-    if (e.target === progress || e.target === volBar ||
-        e.target === volBtn || e.target.closest('.ctrl-vol-btn') ||
-        e.target.closest('.ctrl-bottom')) return;
+    // If touch ended inside any volume control or the seek bar, bail out
+    if (e.target.closest('.ctrl-volume') || e.target.closest('.ctrl-bottom')) return;
     lastTouchTime = Date.now();
   }, { passive: true });
 
-  // Click handler — handles both desktop clicks and iOS synthetic clicks from taps
+  // ── PLAY/PAUSE CLICK HANDLER ────────────────────────
+  // Uses .closest() so clicks on SVG children inside the volume button
+  // or seek bar are correctly excluded — not just the exact target element.
   controls.addEventListener('click', (e) => {
-    if (e.target === progress || e.target === volBar || e.target === volBtn) return;
+    if (e.target.closest('.ctrl-volume') || e.target.closest('.ctrl-bottom')) return;
     e.preventDefault();
 
-    // Auto-unmute on first tap: only fires once, and only if the user has
-    // never manually adjusted volume (so we don't fight their preference).
-    if (video.muted && !hasInteractedWithVolume) {
-      video.muted  = false;
-      video.volume = 0.5;
-      volBar.value = 0.5;
+    // Smart Unmute: fires once on first tap if user hasn't touched volume manually
+    if (player.muted && !hasInteractedWithVolume) {
+      player.muted  = false;
+      player.volume = 0.5;
+      lastVolume    = 0.5;
+      volBar.value  = 0.5;
       volBtn.innerHTML = SVG_VOL_ON;
       hasInteractedWithVolume = true;
     }
 
-    if (video.paused) { video.play(); } else { video.pause(); }
+    if (player.paused) { player.play(); } else { player.pause(); }
   });
 
-  video.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
-  video.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
-  video.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
+  player.addEventListener('play',  () => { playBtn.innerHTML = SVG_PAUSE; clearTimeout(hideTimer); hideTimer = setTimeout(hideBtn, 2000); });
+  player.addEventListener('pause', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
+  player.addEventListener('ended', () => { playBtn.innerHTML = SVG_PLAY;  clearTimeout(hideTimer); showBtn(); });
 
-  // Seek bar
-  video.addEventListener('timeupdate', () => {
-    if (!video.duration) return;
-    progress.value = (video.currentTime / video.duration) * 100;
+  // ── SEEK BAR ─────────────────────────────────────────
+  // Vidstack fires 'time-update' (kebab-case, not 'timeupdate')
+  player.addEventListener('time-update', () => {
+    if (!player.duration) return;
+    progress.value = (player.currentTime / player.duration) * 100;
   });
+  // Stop click bubbling from the seek bar reaching the play/pause handler
+  progress.addEventListener('click', (e) => { e.stopPropagation(); });
   progress.addEventListener('input', () => {
-    if (!video.duration) return;
-    video.currentTime = (progress.value / 100) * video.duration;
+    if (!player.duration) return;
+    player.currentTime = (progress.value / 100) * player.duration;
   });
 
-  // Volume slider — user dragged, so lock in their choice
+  // ── VOLUME SLIDER ────────────────────────────────────
+  // Stop click bubbling so dragging the slider never triggers play/pause
+  volBar.addEventListener('click', (e) => { e.stopPropagation(); });
   volBar.addEventListener('input', () => {
     hasInteractedWithVolume = true;
-    video.volume = volBar.value;
-    video.muted  = (volBar.value == 0);
-    volBtn.innerHTML = video.muted ? SVG_VOL_OFF : SVG_VOL_ON;
+    const v = parseFloat(volBar.value);
+    player.volume = v;
+    player.muted  = (v === 0);
+    if (v > 0) lastVolume = v;          // remember last audible level
+    volBtn.innerHTML = player.muted ? SVG_VOL_OFF : SVG_VOL_ON;
   });
 
-  // Mute/unmute button (touch)
+  // ── MUTE BUTTON ──────────────────────────────────────
+  // Shared toggle logic — completely decoupled from play/pause
+  const toggleMute = () => {
+    hasInteractedWithVolume = true;
+    if (player.muted) {
+      // Unmute: restore last known audible level (never drops back to 0)
+      player.muted  = false;
+      player.volume = lastVolume;
+      volBar.value  = lastVolume;
+      volBtn.innerHTML = SVG_VOL_ON;
+    } else {
+      // Mute: remember current level before silencing
+      if (player.volume > 0) lastVolume = player.volume;
+      player.muted = true;
+      volBar.value = 0;
+      volBtn.innerHTML = SVG_VOL_OFF;
+    }
+    // Video continues playing — mute only affects audio, never playback state
+  };
+
+  // Touch: stopPropagation stops the touchend from reaching the play/pause handler
   volBtn.addEventListener('touchend', (e) => {
     e.stopPropagation();
-    hasInteractedWithVolume = true;
-    video.muted = !video.muted;
-    volBtn.innerHTML = video.muted ? SVG_VOL_OFF : SVG_VOL_ON;
-    volBar.value = video.muted ? 0 : (video.volume || 1);
+    toggleMute();
   }, { passive: true });
 
-  // Mute/unmute button (desktop click, deduplicated from touch)
+  // Desktop click: stopPropagation stops the click from bubbling to controls
+  // Deduplicate against the touchend above using the 500 ms guard
   volBtn.addEventListener('click', (e) => {
+    e.stopPropagation();                // Task 1: decouple from play/pause
     if (Date.now() - lastTouchTime < 500) return;
     e.preventDefault();
-    hasInteractedWithVolume = true;
-    video.muted = !video.muted;
-    volBtn.innerHTML = video.muted ? SVG_VOL_OFF : SVG_VOL_ON;
-    volBar.value = video.muted ? 0 : (video.volume || 1);
+    toggleMute();
   });
 });
 
-// ── VIDEO PAUSE WHEN OFF-SCREEN ──────────────────────
-// WeakMap tracks videos the observer auto-paused (vs user-paused).
+// ── VIDEO PAUSE WHEN OFF-SCREEN (Vidstack API) ───────
+// WeakMap tracks players the observer auto-paused (vs user-paused).
 // On re-entry we only resume if *we* were the one who paused it.
 const observerPaused = new WeakMap();
 
 const videoVisibilityObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    const video = entry.target.querySelector('video');
-    if (!video) return;
+    const player = entry.target.querySelector('media-player');
+    if (!player) return;
     if (entry.isIntersecting) {
       // Came back into view — resume only if observer paused it
-      if (observerPaused.get(video)) {
-        video.play().catch(() => {});
-        observerPaused.set(video, false);
+      if (observerPaused.get(player)) {
+        player.play().catch(() => {});
+        observerPaused.set(player, false);
       }
     } else {
       // Left viewport — pause only if currently playing
-      if (!video.paused) {
-        video.pause();
-        observerPaused.set(video, true);
+      if (!player.paused) {
+        player.pause();
+        observerPaused.set(player, true);
       }
     }
   });

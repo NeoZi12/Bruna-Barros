@@ -11,6 +11,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn.vidstack.io/player/theme.css" />
+    <link rel="stylesheet" href="https://cdn.vidstack.io/player/video.css" />
+    <script type="module" src="https://cdn.vidstack.io/player"></script>
   </head>
   <body>
     <!-- ── NAVBAR ─────────────────────────────────────── -->
@@ -96,10 +99,14 @@
               </p>
             </div>
           </div>
+          <!-- TEMPORARILY HIDDEN — restore when intro video is ready.
+               Remove this comment block to re-enable the About phone mockup.
           <div class="about-photo-placeholder">
             <div class="portfolio-phone">
               <div class="phone-screen">
-                <video src="videos/Video1.mp4" poster="photos/poster1.jpg" loop playsinline muted preload="metadata"></video>
+                <media-player class="portfolio-video" src="videos/Video1.mp4" poster="photos/poster1.jpg" playsinline load="visible" muted loop>
+                  <media-provider></media-provider>
+                </media-player>
                 <div class="video-controls">
                   <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
                   <div class="ctrl-bottom">
@@ -119,6 +126,7 @@
               <div class="btn3"></div>
             </div>
           </div>
+          -->
         </div>
       </div>
     </section>
@@ -264,7 +272,9 @@
           <div class="portfolio-item">
             <div class="portfolio-phone">
               <div class="phone-screen">
-                <video src="videos/Video1.mp4" poster="photos/poster1.jpg" loop playsinline muted preload="metadata"></video>
+                <media-player class="portfolio-video" src="videos/Video1.mp4" poster="photos/poster1.jpg" playsinline load="visible" muted loop>
+                  <media-provider></media-provider>
+                </media-player>
                 <div class="video-controls">
                   <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
                   <div class="ctrl-bottom">
@@ -288,7 +298,9 @@
           <div class="portfolio-item">
             <div class="portfolio-phone">
               <div class="phone-screen">
-                <video src="videos/Video2.mp4" poster="photos/poster2.jpg" loop playsinline muted preload="metadata"></video>
+                <media-player class="portfolio-video" src="videos/Video2.mp4" poster="photos/poster2.jpg" playsinline load="visible" muted loop>
+                  <media-provider></media-provider>
+                </media-player>
                 <div class="video-controls">
                   <button class="ctrl-play-btn" aria-label="Play/Pause">&#9654;</button>
                   <div class="ctrl-bottom">
