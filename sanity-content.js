@@ -26,7 +26,7 @@
 // ── 1. CONFIGURATION ──────────────────────────────────────────────────────────
 
 const SANITY_PROJECT_ID = "u3pno5p8";
-const SANITY_DATASET    = "production";
+const SANITY_DATASET = "production";
 const SANITY_API_VERSION = "2024-01-01";
 
 // ── 2. CORE FETCH HELPER ──────────────────────────────────────────────────────
@@ -45,7 +45,9 @@ async function fetchFromSanity(query) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn(`[Sanity] API error ${response.status}: ${response.statusText}`);
+      console.warn(
+        `[Sanity] API error ${response.status}: ${response.statusText}`,
+      );
       return null;
     }
     const json = await response.json();
@@ -70,9 +72,9 @@ async function fetchFromSanity(query) {
  */
 function sanityImageUrl(ref, width) {
   const withoutPrefix = ref.replace(/^image-/, "");
-  const parts         = withoutPrefix.split("-");
-  const ext           = parts.pop();
-  const filename      = parts.join("-");
+  const parts = withoutPrefix.split("-");
+  const ext = parts.pop();
+  const filename = parts.join("-");
 
   let url =
     `https://cdn.sanity.io/images/${SANITY_PROJECT_ID}/${SANITY_DATASET}` +
@@ -93,9 +95,9 @@ function sanityImageUrl(ref, width) {
  */
 function sanityFileUrl(ref) {
   const withoutPrefix = ref.replace(/^file-/, "");
-  const parts         = withoutPrefix.split("-");
-  const ext           = parts.pop();
-  const id            = parts.join("-");
+  const parts = withoutPrefix.split("-");
+  const ext = parts.pop();
+  const id = parts.join("-");
 
   return `https://cdn.sanity.io/files/${SANITY_PROJECT_ID}/${SANITY_DATASET}/${id}.${ext}`;
 }
@@ -119,7 +121,7 @@ function renderPortableText(blocks) {
         .map((span) => {
           let text = span.text || "";
           if (span.marks?.includes("strong")) text = `<strong>${text}</strong>`;
-          if (span.marks?.includes("em"))     text = `<em>${text}</em>`;
+          if (span.marks?.includes("em")) text = `<em>${text}</em>`;
           return text;
         })
         .join("");
@@ -166,7 +168,7 @@ function pricingColumnHtml(pkg) {
  * @returns {string}
  */
 function portfolioItemHtml(video) {
-  const videoUrl  = video.videoFile?.asset?._ref
+  const videoUrl = video.videoFile?.asset?._ref
     ? sanityFileUrl(video.videoFile.asset._ref)
     : "";
   const posterUrl = video.posterImage?.asset?._ref
@@ -238,7 +240,7 @@ async function loadSiteSettings() {
   if (s.email) {
     const heroEmail = document.querySelector(".hero-email");
     if (heroEmail) {
-      heroEmail.href        = `mailto:${s.email}`;
+      heroEmail.href = `mailto:${s.email}`;
       heroEmail.textContent = s.email;
     }
   }
@@ -257,7 +259,7 @@ async function loadSiteSettings() {
   if (s.email) {
     const contactBtn = document.querySelector(".section-contact .btn-outline");
     if (contactBtn) {
-      contactBtn.href        = `mailto:${s.email}`;
+      contactBtn.href = `mailto:${s.email}`;
       contactBtn.textContent = s.email;
     }
   }
@@ -346,7 +348,10 @@ async function loadAbout() {
 
   if (Array.isArray(about.body) && about.body.length > 0) {
     textContainer.querySelectorAll("p").forEach((p) => p.remove());
-    textContainer.insertAdjacentHTML("beforeend", renderPortableText(about.body));
+    textContainer.insertAdjacentHTML(
+      "beforeend",
+      renderPortableText(about.body),
+    );
   }
 }
 
