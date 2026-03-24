@@ -47,9 +47,16 @@ const videoVisibilityObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.5 });
 
-document.querySelectorAll('.portfolio-phone').forEach(phone => {
-  videoVisibilityObserver.observe(phone);
-});
+// Exposed globally so sanity-content.js can re-observe newly injected phones
+// after the portfolio grid is rebuilt from CMS data.
+window.observePortfolioPhones = () => {
+  document.querySelectorAll('.portfolio-phone').forEach(phone => {
+    videoVisibilityObserver.observe(phone);
+  });
+};
+
+// Observe the phones present in the initial static HTML.
+window.observePortfolioPhones();
 
 // ── ACTIVE NAV ON SCROLL ─────────────────────────────
 // Build a map of section-id → nav anchor element once at startup.
