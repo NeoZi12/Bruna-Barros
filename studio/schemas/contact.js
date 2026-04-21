@@ -2,9 +2,8 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * Contact Section — the "Let's Work Together" section at the bottom.
- *
- * The heading and subheading are managed here.
- * The email address and social links come from Site Settings.
+ * Both the heading and subheading are translatable.
+ * Email + social links come from Site Settings.
  */
 export const contact = defineType({
   name: 'contact',
@@ -15,7 +14,7 @@ export const contact = defineType({
     defineField({
       name: 'heading',
       title: 'Heading',
-      type: 'string',
+      type: 'i18nString',
       description:
         'The main heading of the contact section (e.g. "Let\'s Work Together!").',
       validation: (Rule) => Rule.required(),
@@ -23,13 +22,13 @@ export const contact = defineType({
     defineField({
       name: 'subheading',
       title: 'Subheading',
-      type: 'string',
+      type: 'i18nString',
       description:
         'A short line below the heading (e.g. "If you have a project in mind, I\'d love to hear from you.").',
     }),
   ],
   preview: {
-    select: { title: 'heading' },
+    select: { title: 'heading.en' },
     prepare({ title }) {
       return { title: `Contact — ${title || 'Untitled'}` }
     },

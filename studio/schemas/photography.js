@@ -2,10 +2,7 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * Photography Gallery — the 4-column dark photo grid.
- *
- * Upload photos and add descriptive alt text for each one.
- * Alt text is important for accessibility and SEO.
- * Drag photos to reorder them.
+ * Alt text is translatable (important for accessibility in each language).
  */
 export const photography = defineType({
   name: 'photography',
@@ -16,7 +13,7 @@ export const photography = defineType({
     defineField({
       name: 'sectionTitle',
       title: 'Section Title',
-      type: 'string',
+      type: 'i18nString',
       description: 'Heading shown above the photo grid (e.g. "Photography").',
       validation: (Rule) => Rule.required(),
     }),
@@ -34,8 +31,9 @@ export const photography = defineType({
             defineField({
               name: 'alt',
               title: 'Alt Text',
-              type: 'string',
-              description: 'Describe what\'s in the photo — used for accessibility and SEO.',
+              type: 'i18nString',
+              description:
+                'Describe what\'s in the photo — used for accessibility and SEO. Translated to each language.',
               isHighlighted: true,
               validation: (Rule) =>
                 Rule.required().warning('Alt text is required for accessibility.'),
@@ -47,7 +45,7 @@ export const photography = defineType({
     }),
   ],
   preview: {
-    select: { title: 'sectionTitle' },
+    select: { title: 'sectionTitle.en' },
     prepare({ title }) {
       return { title: `Photography — ${title || 'Untitled'}` }
     },

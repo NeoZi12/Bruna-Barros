@@ -2,9 +2,7 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * How It Works — the numbered process steps section.
- *
- * Each step has a display number, a short title, and a description.
- * Drag to reorder steps.
+ * stepNumber stays the same in every language; title + description are translatable.
  */
 export const howItWorks = defineType({
   name: 'howItWorks',
@@ -15,7 +13,7 @@ export const howItWorks = defineType({
     defineField({
       name: 'sectionTitle',
       title: 'Section Title',
-      type: 'string',
+      type: 'i18nString',
       description: 'Heading shown above the steps (e.g. "How It Works").',
       validation: (Rule) => Rule.required(),
     }),
@@ -35,29 +33,28 @@ export const howItWorks = defineType({
               name: 'stepNumber',
               title: 'Step Number',
               type: 'string',
-              description: 'The display number (e.g. "01", "02", "03").',
+              description: 'The display number (e.g. "01", "02", "03"). Same in every language.',
               validation: (Rule) => Rule.required(),
             }),
             defineField({
               name: 'title',
               title: 'Step Title',
-              type: 'string',
+              type: 'i18nString',
               description: 'Short title of this step (e.g. "Send the Brief").',
               validation: (Rule) => Rule.required(),
             }),
             defineField({
               name: 'description',
               title: 'Description',
-              type: 'text',
-              rows: 3,
+              type: 'i18nText',
               description: 'A couple of sentences explaining what happens in this step.',
               validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
-            select: { num: 'stepNumber', title: 'title' },
+            select: { num: 'stepNumber', title: 'title.en' },
             prepare({ num, title }) {
-              return { title: `Step ${num} — ${title}` }
+              return { title: `Step ${num} — ${title || ''}` }
             },
           },
         },
@@ -66,7 +63,7 @@ export const howItWorks = defineType({
     }),
   ],
   preview: {
-    select: { title: 'sectionTitle' },
+    select: { title: 'sectionTitle.en' },
     prepare({ title }) {
       return { title: `How It Works — ${title || 'Untitled'}` }
     },

@@ -2,9 +2,7 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * Services Section — the "What I Create" card grid.
- *
- * Each card describes one type of content you offer.
- * Add, remove, or reorder cards using drag-and-drop in the Studio.
+ * Each card's title + description are translatable. Drag to reorder.
  */
 export const services = defineType({
   name: 'services',
@@ -15,7 +13,7 @@ export const services = defineType({
     defineField({
       name: 'sectionTitle',
       title: 'Section Title',
-      type: 'string',
+      type: 'i18nString',
       description: 'Heading shown above the service cards (e.g. "What I Create").',
       validation: (Rule) => Rule.required(),
     }),
@@ -33,24 +31,23 @@ export const services = defineType({
             defineField({
               name: 'title',
               title: 'Service Title',
-              type: 'string',
+              type: 'i18nString',
               description: 'Short name of the service (e.g. "Travel & Airbnb Content").',
               validation: (Rule) => Rule.required(),
             }),
             defineField({
               name: 'description',
               title: 'Description',
-              type: 'text',
-              rows: 3,
+              type: 'i18nText',
               description: 'A brief description of what this service includes.',
               validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
-            select: { title: 'title', subtitle: 'description' },
+            select: { title: 'title.en', subtitle: 'description.en' },
             prepare({ title, subtitle }) {
               return {
-                title,
+                title: title || '(untitled)',
                 subtitle: subtitle ? subtitle.substring(0, 70) + '…' : '',
               }
             },
@@ -61,7 +58,7 @@ export const services = defineType({
     }),
   ],
   preview: {
-    select: { title: 'sectionTitle' },
+    select: { title: 'sectionTitle.en' },
     prepare({ title }) {
       return { title: `Services — ${title || 'Untitled'}` }
     },

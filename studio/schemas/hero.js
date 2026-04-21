@@ -3,9 +3,9 @@ import { defineType, defineField } from 'sanity'
 /**
  * Hero Section — the first thing visitors see at the top of the page.
  *
- * Contains the name heading, role subtitle, and profile photo.
- * Email and social links live in Site Settings so they only need
- * to be updated in one place.
+ * firstName, lastName are translatable (some names transliterate differently
+ * in Portuguese / Spanish contexts, so we let the translator handle it).
+ * The role / subtitle is translatable. The hero image is not.
  */
 export const hero = defineType({
   name: 'hero',
@@ -16,21 +16,21 @@ export const hero = defineType({
     defineField({
       name: 'firstName',
       title: 'First Name',
-      type: 'string',
+      type: 'i18nString',
       description: 'Displayed on the first line of the large heading.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'lastName',
       title: 'Last Name',
-      type: 'string',
+      type: 'i18nString',
       description: 'Displayed on the second line of the large heading.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'role',
       title: 'Role / Subtitle',
-      type: 'string',
+      type: 'i18nString',
       description:
         'Shown under the name (e.g. "UGC Creator & Content Creator"). Use & for the styled ampersand.',
       validation: (Rule) => Rule.required(),
@@ -46,8 +46,8 @@ export const hero = defineType({
   ],
   preview: {
     select: {
-      firstName: 'firstName',
-      lastName: 'lastName',
+      firstName: 'firstName.en',
+      lastName: 'lastName.en',
       media: 'heroImage',
     },
     prepare({ firstName, lastName, media }) {

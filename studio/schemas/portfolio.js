@@ -2,10 +2,7 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * Portfolio Videos — the phone mockup video showcase.
- *
- * Each video appears inside a phone frame. Upload the .mp4 file and
- * a poster/thumbnail image. The label appears below the phone frame.
- * Drag to reorder videos.
+ * Labels are translatable. Video files and poster images are language-neutral.
  */
 export const portfolio = defineType({
   name: 'portfolio',
@@ -16,7 +13,7 @@ export const portfolio = defineType({
     defineField({
       name: 'sectionTitle',
       title: 'Section Title',
-      type: 'string',
+      type: 'i18nString',
       description: 'Heading shown above the portfolio (e.g. "Portfolio").',
       validation: (Rule) => Rule.required(),
     }),
@@ -35,7 +32,7 @@ export const portfolio = defineType({
             defineField({
               name: 'label',
               title: 'Label',
-              type: 'string',
+              type: 'i18nString',
               description:
                 'Short label shown below the phone frame (e.g. "Travel", "Beauty").',
               validation: (Rule) => Rule.required(),
@@ -59,7 +56,7 @@ export const portfolio = defineType({
           ],
           preview: {
             select: {
-              title: 'label',
+              title: 'label.en',
               media: 'posterImage',
             },
           },
@@ -69,7 +66,7 @@ export const portfolio = defineType({
     }),
   ],
   preview: {
-    select: { title: 'sectionTitle' },
+    select: { title: 'sectionTitle.en' },
     prepare({ title }) {
       return { title: `Portfolio — ${title || 'Untitled'}` }
     },

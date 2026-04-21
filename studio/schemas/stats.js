@@ -1,11 +1,8 @@
 import { defineType, defineField } from 'sanity'
 
 /**
- * Stats Bar — the dark row of numbers between Pricing and Portfolio.
- *
- * Each stat is a large value (e.g. "50K") paired with a label
- * (e.g. "YouTube Subscribers"). Update the numbers here whenever
- * your metrics change. Drag to reorder.
+ * Stats Bar — the dark row of numbers.
+ * The value ("50K") is language-neutral; the label ("YouTube Subscribers") is translatable.
  */
 export const stats = defineType({
   name: 'stats',
@@ -29,20 +26,20 @@ export const stats = defineType({
               title: 'Value',
               type: 'string',
               description:
-                'The large metric displayed (e.g. "50K", "3+", "3").',
+                'The large metric displayed (e.g. "50K", "3+", "3"). Same in all languages.',
               validation: (Rule) => Rule.required(),
             }),
             defineField({
               name: 'label',
               title: 'Label',
-              type: 'string',
+              type: 'i18nString',
               description:
                 'The description shown below the number (e.g. "YouTube Subscribers").',
               validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
-            select: { title: 'value', subtitle: 'label' },
+            select: { title: 'value', subtitle: 'label.en' },
           },
         },
       ],

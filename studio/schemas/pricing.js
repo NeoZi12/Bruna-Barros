@@ -3,8 +3,9 @@ import { defineType, defineField } from 'sanity'
 /**
  * Pricing Section — the three-column pricing table.
  *
- * Each package has a name, price label, feature list, and a CTA button.
- * Mark one package as "Featured" to give it the highlighted "Most Popular" style.
+ * Every text field (name, price label, features, CTA) is translatable.
+ * Numbers-only fields don't exist here — prices are strings with currency.
+ * The "featured" boolean is language-neutral.
  */
 export const pricing = defineType({
   name: 'pricing',
@@ -15,15 +16,14 @@ export const pricing = defineType({
     defineField({
       name: 'sectionTitle',
       title: 'Section Title',
-      type: 'string',
+      type: 'i18nString',
       description: 'Heading shown above the pricing table (e.g. "Pricing").',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'introText',
       title: 'Intro Text',
-      type: 'text',
-      rows: 2,
+      type: 'i18nText',
       description: 'Small text shown below the heading, above the pricing columns.',
     }),
     defineField({
@@ -41,14 +41,14 @@ export const pricing = defineType({
             defineField({
               name: 'name',
               title: 'Package Name',
-              type: 'string',
+              type: 'i18nString',
               description: 'e.g. "Starter", "Core", "Brand Pack"',
               validation: (Rule) => Rule.required(),
             }),
             defineField({
               name: 'priceLabel',
               title: 'Price Label',
-              type: 'string',
+              type: 'i18nString',
               description:
                 'Displayed as the main price line (e.g. "Starting at $75 USD").',
               validation: (Rule) => Rule.required(),
@@ -58,13 +58,13 @@ export const pricing = defineType({
               title: 'Features / Deliverables',
               type: 'array',
               description: 'List each feature or deliverable as a separate item.',
-              of: [{ type: 'string' }],
+              of: [{ type: 'i18nString' }],
               validation: (Rule) => Rule.required().min(1),
             }),
             defineField({
               name: 'targetDescription',
               title: 'Who It\'s For',
-              type: 'string',
+              type: 'i18nString',
               description:
                 'A short sentence describing who this package suits best (shown below the feature list).',
             }),
@@ -79,7 +79,7 @@ export const pricing = defineType({
             defineField({
               name: 'badgeLabel',
               title: 'Badge Label',
-              type: 'string',
+              type: 'i18nString',
               description:
                 'Only used when Featured is on. Defaults to "★ Most Popular" if left blank.',
               hidden: ({ parent }) => !parent?.featured,
@@ -87,21 +87,20 @@ export const pricing = defineType({
             defineField({
               name: 'ctaLabel',
               title: 'Button Label',
-              type: 'string',
+              type: 'i18nString',
               description: 'Text on the call-to-action button (e.g. "Get Started").',
-              initialValue: 'Get Started',
               validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
             select: {
-              name: 'name',
-              price: 'priceLabel',
+              name: 'name.en',
+              price: 'priceLabel.en',
               featured: 'featured',
             },
             prepare({ name, price, featured }) {
               return {
-                title: featured ? `★ ${name}` : name,
+                title: featured ? `★ ${name || ''}` : name || '(unnamed)',
                 subtitle: price,
               }
             },
@@ -112,7 +111,7 @@ export const pricing = defineType({
     }),
   ],
   preview: {
-    select: { title: 'sectionTitle' },
+    select: { title: 'sectionTitle.en' },
     prepare({ title }) {
       return { title: `Pricing — ${title || 'Untitled'}` }
     },

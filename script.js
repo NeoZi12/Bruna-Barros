@@ -1,3 +1,48 @@
+// ── LANGUAGE SWITCHER ────────────────────────────────
+// Path-based: "/" → en, "/pt" → pt, "/es" → es.
+// Exposed on window so sanity-content.js can read it on initial load.
+const SUPPORTED_LANGS = ['en', 'pt', 'es'];
+
+window.getCurrentLang = function () {
+  const seg = window.location.pathname.split('/').filter(Boolean)[0];
+  return SUPPORTED_LANGS.includes(seg) ? seg : 'en';
+};
+
+function setLanguage(lang) {
+  if (!SUPPORTED_LANGS.includes(lang)) return;
+  const newPath = lang === 'en' ? '/' : `/${lang}`;
+  // Preserve the hash (e.g. "#about") so clicking EN/PT/ES while sitting on
+  // a section anchor doesn't scroll the user back to the top.
+  const hash = window.location.hash || '';
+  window.history.pushState({ lang }, '', newPath + hash);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  if (typeof window.applyUIStrings === 'function') window.applyUIStrings(lang);
+  if (typeof window.loadSanityContent === 'function') window.loadSanityContent(lang);
+}
+
+document.querySelectorAll('.lang-btn').forEach((btn) => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+
+// Back/forward browser buttons: pick up the new URL's language.
+window.addEventListener('popstate', () => {
+  setLanguage(window.getCurrentLang());
+});
+
+// On first load, sync the <html lang> attr and UI strings with the URL.
+// Sanity content loading itself is triggered by sanity-content.js's own init.
+(function syncLangOnLoad() {
+  const lang = window.getCurrentLang();
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  if (typeof window.applyUIStrings === 'function') window.applyUIStrings(lang);
+})();
+
 // ── MOBILE NAV TOGGLE ────────────────────────────────
 const toggle = document.getElementById('navToggle');
 const navLinks = document.getElementById('navLinks');

@@ -5,17 +5,14 @@
  * Fetches all website content from Sanity's public CDN and updates the DOM.
  * Works without any build step — plain fetch() calls from a <script defer> tag.
  *
- * SECTIONS CONNECTED:
- *   ✅ Site Settings  — nav brand, email, social links, footer text
- *   ✅ Hero           — name, role, profile photo
- *   ✅ About          — heading, bio (rich text with bold/italic)
- *   ✅ Services       — section title + service cards
- *   ✅ Pricing        — section title, intro text, pricing packages
- *   ✅ Stats Bar      — all stat number/label pairs
- *   ✅ Portfolio      — section title + video phone mockups
- *   ✅ Photography    — section title + photo gallery
- *   ✅ How It Works   — section title + numbered process steps
- *   ✅ Contact        — heading, subheading
+ * MULTI-LANGUAGE:
+ *   The current language comes from window.getCurrentLang() (defined in
+ *   script.js). Translatable fields are stored in Sanity as i18nString /
+ *   i18nText / i18nPortableText objects: { en, pt, es, ptLocked, esLocked, ... }.
+ *   pickLang() pulls the right language's value and falls back to English.
+ *
+ *   Legacy plain strings in existing documents are tolerated — pickLang returns
+ *   them as-is so the site keeps working during a progressive data migration.
  *
  * FALLBACK:
  *   If Sanity returns no data for a section, the static HTML in index.html
@@ -31,11 +28,6 @@ const SANITY_API_VERSION = "2024-01-01";
 
 // ── 2. CORE FETCH HELPER ──────────────────────────────────────────────────────
 
-/**
- * Sends a GROQ query to Sanity's public CDN and returns the result or null.
- * @param {string} query - GROQ query string
- * @returns {Promise<any|null>}
- */
 async function fetchFromSanity(query) {
   const url =
     `https://${SANITY_PROJECT_ID}.api.sanity.io` +
@@ -60,16 +52,6 @@ async function fetchFromSanity(query) {
 
 // ── 3. URL BUILDERS ───────────────────────────────────────────────────────────
 
-/**
- * Converts a Sanity image asset _ref to a CDN image URL.
- *
- * Input:  "image-Tb9Ew8CX-2000x3000-jpg"
- * Output: "https://cdn.sanity.io/images/projectId/dataset/Tb9Ew8CX-2000x3000.jpg"
- *
- * @param {string} ref   - The Sanity asset _ref string
- * @param {number} [width] - Optional max width (triggers auto-resizing)
- * @returns {string}
- */
 function sanityImageUrl(ref, width) {
   const withoutPrefix = ref.replace(/^image-/, "");
   const parts = withoutPrefix.split("-");
@@ -84,15 +66,6 @@ function sanityImageUrl(ref, width) {
   return url;
 }
 
-/**
- * Converts a Sanity file asset _ref to a CDN file URL.
- *
- * Input:  "file-abc123def456-mp4"
- * Output: "https://cdn.sanity.io/files/projectId/dataset/abc123def456.mp4"
- *
- * @param {string} ref - The Sanity asset _ref string
- * @returns {string}
- */
 function sanityFileUrl(ref) {
   const withoutPrefix = ref.replace(/^file-/, "");
   const parts = withoutPrefix.split("-");
@@ -102,15 +75,31 @@ function sanityFileUrl(ref) {
   return `https://cdn.sanity.io/files/${SANITY_PROJECT_ID}/${SANITY_DATASET}/${id}.${ext}`;
 }
 
-// ── 4. PORTABLE TEXT RENDERER ─────────────────────────────────────────────────
+// ── 4. LANGUAGE PICKER ────────────────────────────────────────────────────────
 
 /**
- * Converts Sanity Portable Text blocks to an HTML string.
- * Handles bold (strong) and italic (em) marks.
+ * Returns the requested-language value from a translatable field.
  *
- * @param {Array} blocks - Sanity Portable Text block array
- * @returns {string} HTML string
+ * Handles three shapes for robustness:
+ *   1. i18nString / i18nText object → { en, pt, es, ... }. Picks field[lang]
+ *      and falls back to field.en if empty.
+ *   2. i18nPortableText object → { en: [blocks], pt: [blocks], ... }. Same logic.
+ *   3. Legacy plain string or array (pre-i18n data) → returned as-is so existing
+ *      content keeps rendering while a migration/seed runs.
  */
+function pickLang(field, lang) {
+  if (field == null) return "";
+  if (typeof field === "string") return field; // legacy plain string
+  if (Array.isArray(field)) return field; // legacy Portable Text (array of blocks)
+  const val = field[lang];
+  if (val != null && (typeof val === "string" ? val.trim() : val.length > 0)) {
+    return val;
+  }
+  return field.en ?? "";
+}
+
+// ── 5. PORTABLE TEXT RENDERER ─────────────────────────────────────────────────
+
 function renderPortableText(blocks) {
   if (!Array.isArray(blocks)) return "";
 
@@ -130,51 +119,42 @@ function renderPortableText(blocks) {
     .join("\n");
 }
 
-// ── 5. HTML TEMPLATES ─────────────────────────────────────────────────────────
+// ── 6. HTML TEMPLATES ─────────────────────────────────────────────────────────
 
-/**
- * Builds the inner HTML for a single pricing column.
- * @param {Object} pkg - Pricing package object from Sanity
- * @returns {string}
- */
-function pricingColumnHtml(pkg) {
+function pricingColumnHtml(pkg, lang) {
   const featuredClass = pkg.featured ? " pricing-col--featured" : "";
+  const badgeLabel = pickLang(pkg.badgeLabel, lang) || "★ Most Popular";
   const badge = pkg.featured
-    ? `<span class="pricing-badge">${escapeHtml(pkg.badgeLabel || "★ Most Popular")}</span>`
+    ? `<span class="pricing-badge">${escapeHtml(badgeLabel)}</span>`
     : "";
 
   const featureItems = (pkg.features || [])
-    .map((f) => `<li>${escapeHtml(f)}</li>`)
+    .map((f) => `<li>${escapeHtml(pickLang(f, lang))}</li>`)
     .join("\n              ");
 
   return `
           <div class="pricing-col${featuredClass}">
             <div class="pricing-inner">
               ${badge}
-              <span class="pricing-name">${escapeHtml(pkg.name || "")}</span>
-              <span class="pricing-price">${escapeHtml(pkg.priceLabel || "")}</span>
+              <span class="pricing-name">${escapeHtml(pickLang(pkg.name, lang))}</span>
+              <span class="pricing-price">${escapeHtml(pickLang(pkg.priceLabel, lang))}</span>
               <ul class="pricing-features">
               ${featureItems}
               </ul>
-              <p class="pricing-target">${escapeHtml(pkg.targetDescription || "")}</p>
-              <a href="#contact" class="pricing-cta">${escapeHtml(pkg.ctaLabel || "Get Started")}</a>
+              <p class="pricing-target">${escapeHtml(pickLang(pkg.targetDescription, lang))}</p>
+              <a href="#contact" class="pricing-cta">${escapeHtml(pickLang(pkg.ctaLabel, lang) || "Get Started")}</a>
             </div>
           </div>`;
 }
 
-/**
- * Builds the HTML for a single portfolio item (phone mockup + video + label).
- * @param {Object} video - Portfolio video object from Sanity
- * @returns {string}
- */
-function portfolioItemHtml(video) {
+function portfolioItemHtml(video, lang) {
   const videoUrl = video.videoFile?.asset?._ref
     ? sanityFileUrl(video.videoFile.asset._ref)
     : "";
   const posterUrl = video.posterImage?.asset?._ref
     ? sanityImageUrl(video.posterImage.asset._ref, 560)
     : "";
-  const label = escapeHtml(video.label || "");
+  const label = escapeHtml(pickLang(video.label, lang));
 
   if (!videoUrl) return "";
 
@@ -207,22 +187,21 @@ function portfolioItemHtml(video) {
           </div>`;
 }
 
-/** Escapes HTML special characters to prevent XSS. */
 function escapeHtml(str) {
-  return String(str)
+  return String(str ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
 
-// ── 6. SECTION LOADERS ────────────────────────────────────────────────────────
+// ── 7. SECTION LOADERS ────────────────────────────────────────────────────────
 
-/**
- * Site Settings — updates navbar brand, email links, social links, footer.
- * These values are shared across Hero, Contact, and the Footer.
- */
-async function loadSiteSettings() {
+// Each loader accepts the current language. Every GROQ query asks for the
+// full i18n object (en, pt, es) so we can pick in JS and also hot-swap
+// languages in-place without re-fetching when the user toggles the switcher.
+
+async function loadSiteSettings(lang) {
   const s = await fetchFromSanity(`
     *[_type == "siteSettings" && _id == "siteSettings"][0] {
       brandName, email, instagramUrl, youtubeUrl, tiktokUrl, footerText
@@ -230,13 +209,12 @@ async function loadSiteSettings() {
   `);
   if (!s) return;
 
-  // Navbar brand name
-  if (s.brandName) {
+  const brandName = pickLang(s.brandName, lang);
+  if (brandName) {
     const brand = document.querySelector(".nav-brand");
-    if (brand) brand.textContent = s.brandName;
+    if (brand) brand.textContent = brandName;
   }
 
-  // Hero email link
   if (s.email) {
     const heroEmail = document.querySelector(".hero-email");
     if (heroEmail) {
@@ -245,7 +223,6 @@ async function loadSiteSettings() {
     }
   }
 
-  // Hero social links (3 anchors inside .hero-socials, order: Instagram · YouTube · TikTok)
   const heroSocials = document.querySelector(".hero-socials");
   if (heroSocials) {
     const links = heroSocials.querySelectorAll("a");
@@ -255,7 +232,6 @@ async function loadSiteSettings() {
     });
   }
 
-  // Contact section email button
   if (s.email) {
     const contactBtn = document.querySelector(".section-contact .btn-outline");
     if (contactBtn) {
@@ -264,7 +240,6 @@ async function loadSiteSettings() {
     }
   }
 
-  // Contact social links (order: Instagram, YouTube, TikTok)
   const contactSocials = document.querySelector(".contact-socials");
   if (contactSocials) {
     const links = contactSocials.querySelectorAll("a");
@@ -274,17 +249,14 @@ async function loadSiteSettings() {
     });
   }
 
-  // Footer copyright text
-  if (s.footerText) {
+  const footerText = pickLang(s.footerText, lang);
+  if (footerText) {
     const footer = document.querySelector(".footer p");
-    if (footer) footer.textContent = s.footerText;
+    if (footer) footer.textContent = footerText;
   }
 }
 
-/**
- * Hero Section — updates name heading, role subtitle, and profile photo.
- */
-async function loadHero() {
+async function loadHero(lang) {
   const hero = await fetchFromSanity(`
     *[_type == "hero" && _id == "hero"][0] {
       firstName,
@@ -295,41 +267,38 @@ async function loadHero() {
   `);
   if (!hero) return;
 
-  // Name (h1.hero-name)
-  if (hero.firstName || hero.lastName) {
+  const firstName = pickLang(hero.firstName, lang);
+  const lastName = pickLang(hero.lastName, lang);
+  if (firstName || lastName) {
     const nameEl = document.querySelector(".hero-name");
     if (nameEl) {
-      nameEl.innerHTML = `${hero.firstName || ""}<br>${hero.lastName || ""}`;
+      nameEl.innerHTML = `${escapeHtml(firstName)}<br>${escapeHtml(lastName)}`;
     }
   }
 
-  // Role / subtitle (p.hero-subtitle) — preserve styled & if present
-  if (hero.role) {
+  const role = pickLang(hero.role, lang);
+  if (role) {
     const subtitleEl = document.querySelector(".hero-subtitle");
     if (subtitleEl) {
-      if (hero.role.includes("&")) {
-        const [before, after] = hero.role.split("&").map((s) => s.trim());
-        subtitleEl.innerHTML = `${before} <span class="amp">&amp;</span> ${after}`;
+      if (role.includes("&")) {
+        const [before, after] = role.split("&").map((s) => s.trim());
+        subtitleEl.innerHTML = `${escapeHtml(before)} <span class="amp">&amp;</span> ${escapeHtml(after)}`;
       } else {
-        subtitleEl.textContent = hero.role;
+        subtitleEl.textContent = role;
       }
     }
   }
 
-  // Profile photo (.hero-portrait img)
   if (hero.heroImage?.asset?._ref) {
     const imgEl = document.querySelector(".hero-portrait img");
     if (imgEl) {
       imgEl.src = sanityImageUrl(hero.heroImage.asset._ref, 720);
-      imgEl.alt = `${hero.firstName || ""} ${hero.lastName || ""}`.trim();
+      imgEl.alt = `${firstName} ${lastName}`.trim();
     }
   }
 }
 
-/**
- * About Section — updates heading and bio paragraphs (Portable Text).
- */
-async function loadAbout() {
+async function loadAbout(lang) {
   const about = await fetchFromSanity(`
     *[_type == "about" && _id == "about"][0] {
       heading,
@@ -341,24 +310,20 @@ async function loadAbout() {
   const textContainer = document.querySelector(".about-text");
   if (!textContainer) return;
 
-  if (about.heading) {
+  const heading = pickLang(about.heading, lang);
+  if (heading) {
     const h2 = textContainer.querySelector("h2");
-    if (h2) h2.textContent = about.heading;
+    if (h2) h2.textContent = heading;
   }
 
-  if (Array.isArray(about.body) && about.body.length > 0) {
+  const body = pickLang(about.body, lang);
+  if (Array.isArray(body) && body.length > 0) {
     textContainer.querySelectorAll("p").forEach((p) => p.remove());
-    textContainer.insertAdjacentHTML(
-      "beforeend",
-      renderPortableText(about.body),
-    );
+    textContainer.insertAdjacentHTML("beforeend", renderPortableText(body));
   }
 }
 
-/**
- * Services Section — updates the section title and rebuilds the service cards.
- */
-async function loadServices() {
+async function loadServices(lang) {
   const data = await fetchFromSanity(`
     *[_type == "services" && _id == "services"][0] {
       sectionTitle,
@@ -367,9 +332,10 @@ async function loadServices() {
   `);
   if (!data) return;
 
-  if (data.sectionTitle) {
+  const sectionTitle = pickLang(data.sectionTitle, lang);
+  if (sectionTitle) {
     const h2 = document.querySelector(".section-services h2");
-    if (h2) h2.textContent = data.sectionTitle;
+    if (h2) h2.textContent = sectionTitle;
   }
 
   if (Array.isArray(data.items) && data.items.length > 0) {
@@ -379,8 +345,8 @@ async function loadServices() {
         .map(
           (item) => `
           <div class="service-card">
-            <h3>${escapeHtml(item.title || "")}</h3>
-            <p>${escapeHtml(item.description || "")}</p>
+            <h3>${escapeHtml(pickLang(item.title, lang))}</h3>
+            <p>${escapeHtml(pickLang(item.description, lang))}</p>
           </div>`,
         )
         .join("\n");
@@ -388,10 +354,7 @@ async function loadServices() {
   }
 }
 
-/**
- * Pricing Section — updates title, intro text, and rebuilds pricing columns.
- */
-async function loadPricing() {
+async function loadPricing(lang) {
   const data = await fetchFromSanity(`
     *[_type == "pricing" && _id == "pricing"][0] {
       sectionTitle,
@@ -404,28 +367,29 @@ async function loadPricing() {
   `);
   if (!data) return;
 
-  if (data.sectionTitle) {
+  const sectionTitle = pickLang(data.sectionTitle, lang);
+  if (sectionTitle) {
     const h2 = document.querySelector(".section-investment h2");
-    if (h2) h2.textContent = data.sectionTitle;
+    if (h2) h2.textContent = sectionTitle;
   }
 
-  if (data.introText) {
+  const introText = pickLang(data.introText, lang);
+  if (introText) {
     const sub = document.querySelector(".investment-sub");
-    if (sub) sub.textContent = data.introText;
+    if (sub) sub.textContent = introText;
   }
 
   if (Array.isArray(data.packages) && data.packages.length > 0) {
     const grid = document.querySelector(".pricing-grid");
     if (grid) {
-      grid.innerHTML = data.packages.map(pricingColumnHtml).join("\n");
+      grid.innerHTML = data.packages
+        .map((pkg) => pricingColumnHtml(pkg, lang))
+        .join("\n");
     }
   }
 }
 
-/**
- * Stats Bar — rebuilds the stat number/label pairs.
- */
-async function loadStats() {
+async function loadStats(lang) {
   const data = await fetchFromSanity(`
     *[_type == "stats" && _id == "stats"][0] {
       items[] { value, label }
@@ -441,18 +405,13 @@ async function loadStats() {
       (stat) => `
           <div class="stat">
             <span class="stat-number">${escapeHtml(stat.value || "")}</span>
-            <span class="stat-label">${escapeHtml(stat.label || "")}</span>
+            <span class="stat-label">${escapeHtml(pickLang(stat.label, lang))}</span>
           </div>`,
     )
     .join("\n");
 }
 
-/**
- * Portfolio — rebuilds the phone mockup video items.
- * After rebuilding, re-initialises the viewport-based auto-pause/resume
- * observer defined in script.js.
- */
-async function loadPortfolio() {
+async function loadPortfolio(lang) {
   const data = await fetchFromSanity(`
     *[_type == "portfolio" && _id == "portfolio"][0] {
       sectionTitle,
@@ -465,18 +424,19 @@ async function loadPortfolio() {
   `);
   if (!data) return;
 
-  if (data.sectionTitle) {
+  const sectionTitle = pickLang(data.sectionTitle, lang);
+  if (sectionTitle) {
     const h2 = document.querySelector(".section-portfolio h2");
-    if (h2) h2.textContent = data.sectionTitle;
+    if (h2) h2.textContent = sectionTitle;
   }
 
   if (Array.isArray(data.videos) && data.videos.length > 0) {
     const grid = document.querySelector(".portfolio-grid");
     if (grid) {
-      grid.innerHTML = data.videos.map(portfolioItemHtml).join("\n");
+      grid.innerHTML = data.videos
+        .map((v) => portfolioItemHtml(v, lang))
+        .join("\n");
 
-      // Re-attach the viewport observer from script.js so the new
-      // phone elements get the auto-pause/resume behaviour.
       if (typeof window.observePortfolioPhones === "function") {
         window.observePortfolioPhones();
       }
@@ -484,10 +444,7 @@ async function loadPortfolio() {
   }
 }
 
-/**
- * Photography Gallery — updates the section title and rebuilds the photo grid.
- */
-async function loadPhotography() {
+async function loadPhotography(lang) {
   const data = await fetchFromSanity(`
     *[_type == "photography" && _id == "photography"][0] {
       sectionTitle,
@@ -496,9 +453,10 @@ async function loadPhotography() {
   `);
   if (!data) return;
 
-  if (data.sectionTitle) {
+  const sectionTitle = pickLang(data.sectionTitle, lang);
+  if (sectionTitle) {
     const h2 = document.querySelector(".section-photography h2");
-    if (h2) h2.textContent = data.sectionTitle;
+    if (h2) h2.textContent = sectionTitle;
   }
 
   if (Array.isArray(data.photos) && data.photos.length > 0) {
@@ -511,7 +469,7 @@ async function loadPhotography() {
           <div class="photo-tile">
             <img
               src="${sanityImageUrl(p.asset._ref, 800)}"
-              alt="${escapeHtml(p.alt || "")}"
+              alt="${escapeHtml(pickLang(p.alt, lang))}"
             />
           </div>`,
         )
@@ -520,10 +478,7 @@ async function loadPhotography() {
   }
 }
 
-/**
- * How It Works — updates the section title and rebuilds the process steps.
- */
-async function loadHowItWorks() {
+async function loadHowItWorks(lang) {
   const data = await fetchFromSanity(`
     *[_type == "howItWorks" && _id == "howItWorks"][0] {
       sectionTitle,
@@ -532,9 +487,10 @@ async function loadHowItWorks() {
   `);
   if (!data) return;
 
-  if (data.sectionTitle) {
+  const sectionTitle = pickLang(data.sectionTitle, lang);
+  if (sectionTitle) {
     const h2 = document.querySelector(".section-how h2");
-    if (h2) h2.textContent = data.sectionTitle;
+    if (h2) h2.textContent = sectionTitle;
   }
 
   if (Array.isArray(data.steps) && data.steps.length > 0) {
@@ -545,8 +501,8 @@ async function loadHowItWorks() {
           (step) => `
           <div class="step">
             <span class="step-num">${escapeHtml(step.stepNumber || "")}</span>
-            <h3>${escapeHtml(step.title || "")}</h3>
-            <p>${escapeHtml(step.description || "")}</p>
+            <h3>${escapeHtml(pickLang(step.title, lang))}</h3>
+            <p>${escapeHtml(pickLang(step.description, lang))}</p>
           </div>`,
         )
         .join("\n");
@@ -554,11 +510,7 @@ async function loadHowItWorks() {
   }
 }
 
-/**
- * Contact Section — updates the heading and subheading.
- * Email and social links are handled by loadSiteSettings().
- */
-async function loadContact() {
+async function loadContact(lang) {
   const data = await fetchFromSanity(`
     *[_type == "contact" && _id == "contact"][0] {
       heading, subheading
@@ -566,46 +518,54 @@ async function loadContact() {
   `);
   if (!data) return;
 
-  if (data.heading) {
+  const heading = pickLang(data.heading, lang);
+  if (heading) {
     const h2 = document.querySelector(".section-contact h2");
-    if (h2) h2.textContent = data.heading;
+    if (h2) h2.textContent = heading;
   }
 
-  if (data.subheading) {
-    // Target the <p> that is a direct child of .container inside .section-contact
+  const subheading = pickLang(data.subheading, lang);
+  if (subheading) {
     const p = document.querySelector(".section-contact .container > p");
-    if (p) p.textContent = data.subheading;
+    if (p) p.textContent = subheading;
   }
 }
 
-// ── 7. INIT ────────────────────────────────────────────────────────────────────
+// ── 8. INIT / PUBLIC API ──────────────────────────────────────────────────────
 
 /**
- * Entry point — runs all section loaders in parallel once the DOM is ready.
- * All loaders are independent and safe to run concurrently.
+ * Fetches and applies all site content for the given language. Exposed on
+ * window so script.js's setLanguage() can call it when the user clicks a
+ * language toggle.
  */
-function initSanityContent() {
+window.loadSanityContent = function loadSanityContent(lang) {
   if (!SANITY_PROJECT_ID || SANITY_PROJECT_ID === "your-project-id-here") {
     console.info(
       "[Sanity] No project ID set. Open sanity-content.js and set SANITY_PROJECT_ID.",
     );
-    return;
+    return Promise.resolve();
   }
 
-  Promise.all([
-    loadSiteSettings(),
-    loadHero(),
-    loadAbout(),
-    loadServices(),
-    loadPricing(),
-    loadStats(),
-    loadPortfolio(),
-    loadPhotography(),
-    loadHowItWorks(),
-    loadContact(),
+  return Promise.all([
+    loadSiteSettings(lang),
+    loadHero(lang),
+    loadAbout(lang),
+    loadServices(lang),
+    loadPricing(lang),
+    loadStats(lang),
+    loadPortfolio(lang),
+    loadPhotography(lang),
+    loadHowItWorks(lang),
+    loadContact(lang),
   ]).catch((err) => {
     console.warn("[Sanity] Content load error:", err);
   });
+};
+
+function initSanityContent() {
+  const lang =
+    typeof window.getCurrentLang === "function" ? window.getCurrentLang() : "en";
+  window.loadSanityContent(lang);
 }
 
 if (document.readyState === "loading") {

@@ -3,21 +3,19 @@ import { defineType, defineField } from 'sanity'
 /**
  * Site Settings — global data shared across sections.
  *
- * Stores the contact email, social links, navbar brand name, and footer text.
- * Changing these here updates every part of the website that displays them,
- * so you only need to update one place when your email or social handles change.
+ * brandName and footerText are translatable (EN + auto-translated PT/ES).
+ * Email and social URLs are language-neutral.
  */
 export const siteSettings = defineType({
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
-  // Prevent creating or deleting — there should only ever be one of these.
   __experimental_actions: ['update', 'publish'],
   fields: [
     defineField({
       name: 'brandName',
       title: 'Brand Name',
-      type: 'string',
+      type: 'i18nString',
       description: 'Shown in the top-left of the navigation bar.',
       validation: (Rule) => Rule.required(),
     }),
@@ -50,13 +48,13 @@ export const siteSettings = defineType({
     defineField({
       name: 'footerText',
       title: 'Footer Text',
-      type: 'string',
+      type: 'i18nString',
       description:
         'Copyright line at the very bottom of the page (e.g. "© 2026 Bruna Barros. All rights reserved.").',
     }),
   ],
   preview: {
-    select: { title: 'brandName' },
+    select: { title: 'brandName.en' },
     prepare({ title }) {
       return { title: `Site Settings — ${title || 'Untitled'}` }
     },

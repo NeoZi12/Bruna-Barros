@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bruna Barros — UGC Creator</title>
+    <link rel="alternate" hreflang="en" href="https://brunabarros.com/" />
+    <link rel="alternate" hreflang="pt" href="https://brunabarros.com/pt" />
+    <link rel="alternate" hreflang="es" href="https://brunabarros.com/es" />
+    <link rel="alternate" hreflang="x-default" href="https://brunabarros.com/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,15 +25,19 @@
     <nav class="navbar" id="navbar">
       <a href="#hero" class="nav-brand">Bruna Barros</a>
       <ul class="nav-links" id="navLinks">
-        <li><a href="#about">About</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#pricing">Pricing</a></li>
-        <li><a href="#portfolio">Portfolio</a></li>
-        <li class="nav-cta-mobile">
-          <a href="#contact" class="nav-cta">Let's Talk</a>
+        <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#services" data-i18n="nav.services">Services</a></li>
+        <li><a href="#pricing" data-i18n="nav.pricing">Pricing</a></li>
+        <li><a href="#portfolio" data-i18n="nav.portfolio">Portfolio</a></li>
+        <li class="nav-cta-item">
+          <a href="#contact" class="nav-cta" data-i18n="nav.letsTalk">Let's Talk</a>
         </li>
       </ul>
-      <a href="#contact" class="nav-cta nav-cta-desktop">Let's Talk</a>
+      <div class="lang-switcher" role="group" aria-label="Language">
+        <button type="button" class="lang-btn active" data-lang="en" aria-label="English">EN</button>
+        <button type="button" class="lang-btn" data-lang="pt" aria-label="Português">PT</button>
+        <button type="button" class="lang-btn" data-lang="es" aria-label="Español">ES</button>
+      </div>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
         <span></span><span></span><span></span>
       </button>
@@ -387,6 +395,7 @@
       <p>© 2026 Bruna Barros. All rights reserved.</p>
     </footer>
 
+    <script src="lang/ui-strings.js"></script>
     <script src="script.js"></script>
     <script defer src="sanity-content.js"></script>
   </body>

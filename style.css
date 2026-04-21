@@ -118,25 +118,65 @@ body {
   width: 100%;
 }
 
-.nav-cta-mobile { display: none; }
+/* "Let's Talk" CTA now lives inline inside the nav list, next to Portfolio.
+   Keeps the pill shape but shrinks the padding so it balances visually with
+   the surrounding uppercase nav links. */
+.nav-cta-item { display: list-item; }
 
 .nav-cta {
   color: var(--cream);
   text-decoration: none;
   border: 1.5px solid rgba(240, 231, 215, 0.5);
   border-radius: 100px;
-  padding: 15px 38px;
+  padding: 8px 20px;
   font-size: 1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 400;
-  justify-self: end;
   transition: background 0.2s, border-color 0.2s;
+  display: inline-block;
 }
+
+/* Cancel the hover underline the .nav-links a rule adds to everything. */
+.nav-cta::after { display: none !important; }
 
 .nav-cta:hover {
   background: rgba(240, 231, 215, 0.12);
   border-color: rgba(240, 231, 215, 0.8);
+  opacity: 1;
+}
+
+/* ── LANGUAGE SWITCHER ─────────────────────────────── */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  justify-self: end;
+  border: 1px solid rgba(240, 231, 215, 0.25);
+  border-radius: 100px;
+  padding: 3px;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  color: var(--cream);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 100px;
+  opacity: 0.55;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.lang-btn:hover { opacity: 0.9; }
+
+.lang-btn.active {
+  opacity: 1;
+  background: rgba(240, 231, 215, 0.12);
 }
 
 .nav-toggle {
@@ -1207,9 +1247,10 @@ body {
 
 /* ── RESPONSIVE — 900px: trigger hamburger early ────── */
 @media (max-width: 900px) {
-  /* Collapse to brand + toggle; CTA moves into dropdown */
+  /* Collapse to: brand | lang-switcher | toggle. Nav links go into dropdown. */
   .navbar {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
+    gap: 12px;
   }
 
   .nav-links {
@@ -1229,14 +1270,11 @@ body {
 
   .nav-links.open { display: flex; }
   .nav-toggle { display: flex; }
-  .nav-cta-desktop { display: none; }
-  .nav-cta-mobile { display: list-item; }
 
-  .nav-cta-mobile .nav-cta {
-    display: inline-block;
+  /* In the mobile dropdown, shrink the CTA pill slightly. */
+  .nav-cta-item .nav-cta {
     padding: 10px 24px;
     font-size: 0.8rem;
-    justify-self: auto;
   }
 }
 
