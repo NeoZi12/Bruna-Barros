@@ -86,29 +86,41 @@ function verifySanitySignature(rawBody, header, secret) {
 
 /**
  * Translate plain text via Claude. Returns the translation as a string.
- * Throws on API error so the webhook caller can 500.
+ * Uses XML-tag wrapping so short/ambiguous inputs don't trigger conversational
+ * responses, and caps max_tokens proportional to input length to prevent
+ * hallucinated extra content.
  */
 async function translatePlain(englishText, targetLang) {
   if (!englishText || !englishText.trim()) return '';
 
+  const lang = LANG_LABELS[targetLang];
+  // ~4 chars per token, 3x headroom for target-language expansion and the
+  // <translation> wrapper. Clamped to [256, 4096].
+  const maxTokens = Math.max(256, Math.min(4096, Math.ceil(englishText.length / 4) * 3 + 64));
+
   const response = await anthropic.messages.create({
     model: CLAUDE_MODEL,
-    max_tokens: 1024,
-    // temperature: 0 → deterministic output for the same input, which
-    // lets our "skip if translation unchanged" guard actually work.
+    max_tokens: maxTokens,
     temperature: 0,
-    system:
-      `You are translating a UGC (user-generated content) creator's marketing ` +
-      `website from English to ${LANG_LABELS[targetLang]}. Tone: casual, warm, ` +
-      `professional — like a creator writing to brands. ` +
-      `Keep industry terms like "UGC", "CTA", and proper nouns (Bruna Barros) ` +
-      `in English. Preserve punctuation and any ampersand symbol. ` +
-      `Return ONLY the translated text — no preamble, no quotes, no explanation.`,
-    messages: [{ role: 'user', content: englishText }],
+    system: [
+      `Translate the text inside <source> tags from English to ${lang}.`,
+      `Output the translation wrapped in <translation></translation> tags. Nothing outside the tags.`,
+      ``,
+      `Rules:`,
+      `- Do NOT ask questions, add commentary, or request clarification. Short or ambiguous input is fine — translate literally.`,
+      `- NEVER add content, bullet points, or extra sentences that aren't in the source.`,
+      `- Keep unchanged: "Bruna Barros", "UGC", "CTA". Translate everything else, including product/package names (e.g. "Brand Pack" → ${targetLang === 'pt' ? '"Pacote da Marca"' : '"Paquete de Marca"'}).`,
+      `- Preserve all punctuation and ampersands.`,
+      `- Tone: casual, warm, professional — a creator writing to brands.`,
+    ].join('\n'),
+    messages: [{ role: 'user', content: `<source>${englishText}</source>` }],
   });
 
   const block = response.content.find((c) => c.type === 'text');
-  return (block?.text || '').trim();
+  const raw = (block?.text || '').trim();
+  // Extract from <translation> tags; fall back to raw if Claude skipped the wrapper.
+  const match = raw.match(/<translation>([\s\S]*?)<\/translation>/i);
+  return (match ? match[1] : raw).trim();
 }
 
 /**
@@ -253,75 +265,82 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: 'No translatable fields', translated: 0 });
   }
 
-  // Process each field, collecting patch operations.
-  const patchOps = {}; // key = dot-path, value = new value
-
-  let translatedCount = 0;
-  let lockedCount = 0;
-
+  // Build one task per (field × lang). Run them all in parallel — Claude
+  // Haiku handles ~50 concurrent requests easily, and this fits comfortably
+  // under Vercel's function timeout (serial would exceed it on larger docs).
+  const tasks = [];
   for (const { path, value, type } of fields) {
-    const isPortable = type === 'i18nPortableText';
-
     for (const lang of ['pt', 'es']) {
+      tasks.push({ path, value, type, lang });
+    }
+  }
+
+  const results = await Promise.all(
+    tasks.map(async ({ path, value, type, lang }) => {
+      const isPortable = type === 'i18nPortableText';
       const lockField = `${lang}Locked`;
       const snapshotField = `${lang}Snapshot`;
 
-      // Already manually locked — respect it.
-      if (value[lockField]) {
-        lockedCount++;
-        continue;
-      }
+      if (value[lockField]) return { kind: 'locked' };
 
       const current = value[lang];
       const snapshot = value[snapshotField];
       const currentSerialized = isPortable ? JSON.stringify(current ?? []) : current ?? '';
 
-      // Detect manual edit: current value differs from last snapshot we wrote,
-      // AND there's actually a current value to protect.
       const hasContent = isPortable
         ? Array.isArray(current) && current.length > 0
         : typeof current === 'string' && current.trim().length > 0;
 
+      // Manual edit detected → auto-lock and stop overwriting.
       if (hasContent && snapshot && currentSerialized !== snapshot) {
-        // Manual edit detected → lock from now on, update snapshot.
-        patchOps[`${path}.${lockField}`] = true;
-        patchOps[`${path}.${snapshotField}`] = currentSerialized;
-        lockedCount++;
-        continue;
+        return {
+          kind: 'autolock',
+          ops: {
+            [`${path}.${lockField}`]: true,
+            [`${path}.${snapshotField}`]: currentSerialized,
+          },
+        };
       }
 
-      // Unlocked path → translate English → target.
       const english = value.en;
       const englishHasContent = isPortable
         ? Array.isArray(english) && english.length > 0
         : typeof english === 'string' && english.trim().length > 0;
 
-      if (!englishHasContent) continue; // nothing to translate
+      if (!englishHasContent) return { kind: 'empty' };
 
       try {
-        let translated;
-        if (isPortable) {
-          translated = await translatePortableText(english, lang);
-        } else {
-          translated = await translatePlain(english, lang);
-        }
+        const translated = isPortable
+          ? await translatePortableText(english, lang)
+          : await translatePlain(english, lang);
 
         const translatedSerialized = isPortable ? JSON.stringify(translated) : translated;
+        if (currentSerialized === translatedSerialized) return { kind: 'nochange' };
 
-        // Only patch if the translation actually changed — avoids unnecessary writes.
-        if (currentSerialized !== translatedSerialized) {
-          patchOps[`${path}.${lang}`] = translated;
-          patchOps[`${path}.${snapshotField}`] = translatedSerialized;
-          translatedCount++;
-        }
+        return {
+          kind: 'translated',
+          ops: {
+            [`${path}.${lang}`]: translated,
+            [`${path}.${snapshotField}`]: translatedSerialized,
+          },
+        };
       } catch (err) {
         console.error(
           `[translate] Failed for ${_type}:${_id} at ${path}.${lang}:`,
           err.message
         );
-        // Don't fail the whole batch on one field's error.
+        return { kind: 'error' };
       }
-    }
+    })
+  );
+
+  const patchOps = {};
+  let translatedCount = 0;
+  let lockedCount = 0;
+  for (const r of results) {
+    if (r.ops) Object.assign(patchOps, r.ops);
+    if (r.kind === 'translated') translatedCount++;
+    if (r.kind === 'locked' || r.kind === 'autolock') lockedCount++;
   }
 
   if (Object.keys(patchOps).length === 0) {
@@ -364,4 +383,5 @@ export const config = {
   api: {
     bodyParser: false,
   },
+  maxDuration: 60,
 };
