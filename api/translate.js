@@ -71,9 +71,12 @@ function verifySanitySignature(rawBody, header, secret) {
   if (!provided) return false;
 
   const signed = `${parts.t}.${rawBody}`;
-  const expected = crypto.createHmac('sha256', secret).update(signed).digest('hex');
+  const expected = crypto.createHmac('sha256', secret).update(signed).digest('base64url');
   try {
-    return crypto.timingSafeEqual(Buffer.from(provided, 'hex'), Buffer.from(expected, 'hex'));
+    return crypto.timingSafeEqual(
+      Buffer.from(provided, 'base64url'),
+      Buffer.from(expected, 'base64url')
+    );
   } catch {
     return false;
   }
